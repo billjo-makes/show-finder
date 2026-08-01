@@ -7,22 +7,49 @@ const TOP_GENRE_COUNT = 3;
 const TOP_RATED_TITLES_TO_BLEND = 2;
 const SIMILAR_RESULTS_PER_TITLE = 5;
 const MAX_RESULTS = 20;
+// A watchlist add is a tentative signal of interest (no rating yet), so it's
+// weighted the same as an explicit 5-star rating (value 5, weight value - 3).
+const WATCHLIST_TENTATIVE_WEIGHT = 2;
 
 interface RecommendationResult {
   results: TitleSummary[];
   basedOn: { genreNames: string[] };
 }
 
+interface TasteSignal {
+  tmdbId: number;
+  genreIds: number[];
+  weight: number;
+}
+
 export async function getRecommendations(
   profileId: string,
   mediaType: MediaType,
 ): Promise<RecommendationResult> {
-  const ratings = await prisma.rating.findMany({
-    where: { profileId, mediaType },
-    orderBy: { updatedAt: "desc" },
-  });
+  const [ratings, watchlistEntries] = await Promise.all([
+    prisma.rating.findMany({ where: { profileId, mediaType }, orderBy: { updatedAt: "desc" } }),
+    prisma.watchlistEntry.findMany({ where: { profileId, mediaType } }),
+  ]);
 
-  if (ratings.length < MIN_RATINGS_FOR_PERSONALIZATION) {
+  // Explicit ratings take precedence over a tentative watchlist signal for the same title.
+  const signalsByTitle = new Map<number, TasteSignal>();
+  for (const entry of watchlistEntries) {
+    signalsByTitle.set(entry.tmdbId, {
+      tmdbId: entry.tmdbId,
+      genreIds: JSON.parse(entry.genreIds) as number[],
+      weight: WATCHLIST_TENTATIVE_WEIGHT,
+    });
+  }
+  for (const rating of ratings) {
+    signalsByTitle.set(rating.tmdbId, {
+      tmdbId: rating.tmdbId,
+      genreIds: JSON.parse(rating.genreIds) as number[],
+      weight: rating.value - 3,
+    });
+  }
+  const signals = [...signalsByTitle.values()];
+
+  if (signals.length < MIN_RATINGS_FOR_PERSONALIZATION) {
     const { data } = await tmdbClient.get(`/trending/${mediaType}/week`);
     const results = data.results
       .slice(0, MAX_RESULTS)
@@ -31,11 +58,9 @@ export async function getRecommendations(
   }
 
   const genreScores = new Map<number, number>();
-  for (const rating of ratings) {
-    const genreIds = JSON.parse(rating.genreIds) as number[];
-    const weight = rating.value - 3;
-    for (const genreId of genreIds) {
-      genreScores.set(genreId, (genreScores.get(genreId) ?? 0) + weight);
+  for (const signal of signals) {
+    for (const genreId of signal.genreIds) {
+      genreScores.set(genreId, (genreScores.get(genreId) ?? 0) + signal.weight);
     }
   }
 
@@ -45,7 +70,7 @@ export async function getRecommendations(
     .slice(0, TOP_GENRE_COUNT)
     .map(([id]) => id);
 
-  const ratedKeys = new Set(ratings.map((r) => r.tmdbId));
+  const seenKeys = new Set(signals.map((s) => s.tmdbId));
 
   const candidates: TitleSummary[] = [];
 
@@ -60,10 +85,10 @@ export async function getRecommendations(
     );
   }
 
-  const topRatedTitles = [...ratings].sort((a, b) => b.value - a.value).slice(0, TOP_RATED_TITLES_TO_BLEND);
+  const topSignals = [...signals].sort((a, b) => b.weight - a.weight).slice(0, TOP_RATED_TITLES_TO_BLEND);
 
-  for (const title of topRatedTitles) {
-    const { data } = await tmdbClient.get(`/${mediaType}/${title.tmdbId}/similar`);
+  for (const signal of topSignals) {
+    const { data } = await tmdbClient.get(`/${mediaType}/${signal.tmdbId}/similar`);
     candidates.push(
       ...data.results
         .slice(0, SIMILAR_RESULTS_PER_TITLE)
@@ -73,7 +98,7 @@ export async function getRecommendations(
 
   const seen = new Set<number>();
   const deduped = candidates.filter((c) => {
-    if (ratedKeys.has(c.tmdbId) || seen.has(c.tmdbId)) return false;
+    if (seenKeys.has(c.tmdbId) || seen.has(c.tmdbId)) return false;
     seen.add(c.tmdbId);
     return true;
   });

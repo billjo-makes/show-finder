@@ -1,6 +1,12 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import type { AuthResponse, AuthUser, ProfileDTO } from "@show-finder/shared";
-import { fetchMe, login as loginRequest, logout as logoutRequest, register as registerRequest } from "../api/auth";
+import {
+  fetchMe,
+  login as loginRequest,
+  logout as logoutRequest,
+  register as registerRequest,
+  updateCountry as updateCountryRequest,
+} from "../api/auth";
 import { selectProfile } from "../api/profiles";
 
 interface AuthContextValue {
@@ -13,6 +19,7 @@ interface AuthContextValue {
   logout: () => Promise<void>;
   switchProfile: (profileId: string) => Promise<void>;
   refreshProfiles: () => Promise<void>;
+  updateCountry: (country: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -73,9 +80,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setProfiles(res.profiles);
   }
 
+  async function updateCountry(country: string) {
+    const res = await updateCountryRequest(country);
+    setUser(res.user);
+  }
+
   return (
     <AuthContext.Provider
-      value={{ user, activeProfile, profiles, isLoading, login, register, logout, switchProfile, refreshProfiles }}
+      value={{
+        user,
+        activeProfile,
+        profiles,
+        isLoading,
+        login,
+        register,
+        logout,
+        switchProfile,
+        refreshProfiles,
+        updateCountry,
+      }}
     >
       {children}
     </AuthContext.Provider>

@@ -10,6 +10,7 @@ import { TitleCard } from "../components/TitleCard";
 import { WatchlistButton } from "../components/WatchlistButton";
 
 const POSTER_BASE = "https://image.tmdb.org/t/p/w500";
+const PROVIDER_LOGO_BASE = "https://image.tmdb.org/t/p/w45";
 
 export function TitleDetailPage() {
   const { mediaType, id } = useParams<{ mediaType: MediaType; id: string }>();
@@ -126,6 +127,67 @@ export function TitleDetailPage() {
           )}
         </div>
       </div>
+
+      {title.watchProviders &&
+        (title.watchProviders.flatrate.length > 0 ||
+          title.watchProviders.rent.length > 0 ||
+          title.watchProviders.buy.length > 0) && (
+          <section>
+            <h2>Where to watch</h2>
+            {title.watchProviders.flatrate.length > 0 && (
+              <p className="watch-providers-row">
+                <span className="watch-providers-label">Stream:</span>
+                {title.watchProviders.flatrate.map((p) => (
+                  <img
+                    key={p.providerId}
+                    src={`${PROVIDER_LOGO_BASE}${p.logoPath}`}
+                    alt={p.providerName}
+                    title={p.providerName}
+                    className="watch-provider-logo"
+                  />
+                ))}
+              </p>
+            )}
+            {title.watchProviders.rent.length > 0 && (
+              <p className="watch-providers-row">
+                <span className="watch-providers-label">Rent:</span>
+                {title.watchProviders.rent.map((p) => (
+                  <img
+                    key={p.providerId}
+                    src={`${PROVIDER_LOGO_BASE}${p.logoPath}`}
+                    alt={p.providerName}
+                    title={p.providerName}
+                    className="watch-provider-logo"
+                  />
+                ))}
+              </p>
+            )}
+            {title.watchProviders.buy.length > 0 && (
+              <p className="watch-providers-row">
+                <span className="watch-providers-label">Buy:</span>
+                {title.watchProviders.buy.map((p) => (
+                  <img
+                    key={p.providerId}
+                    src={`${PROVIDER_LOGO_BASE}${p.logoPath}`}
+                    alt={p.providerName}
+                    title={p.providerName}
+                    className="watch-provider-logo"
+                  />
+                ))}
+              </p>
+            )}
+            <p className="watch-providers-attribution">
+              Streaming data provided by{" "}
+              {title.watchProviders.link ? (
+                <a href={title.watchProviders.link} target="_blank" rel="noreferrer">
+                  JustWatch
+                </a>
+              ) : (
+                "JustWatch"
+              )}
+            </p>
+          </section>
+        )}
 
       {title.cast.length > 0 && (
         <section>

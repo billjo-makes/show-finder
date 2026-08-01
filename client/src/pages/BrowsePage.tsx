@@ -6,6 +6,12 @@ import { GenreFilter } from "../components/GenreFilter";
 import { TitleCard } from "../components/TitleCard";
 import { discoverTitles, fetchGenres, searchTitles } from "../api/titles";
 
+// TMDB has no dedicated LGBTQ+ genre, so this chip filters by keyword instead
+// of genre id. It's represented locally with a sentinel id that can't collide
+// with a real TMDB genre id.
+const LGBTQ_CHIP_ID = -1;
+const LGBTQ_KEYWORD_ID = 158718;
+
 export function BrowsePage() {
   const [mediaType, setMediaType] = useState<MediaType>("movie");
   const [selectedGenreIds, setSelectedGenreIds] = useState<number[]>([]);
@@ -16,10 +22,17 @@ export function BrowsePage() {
     queryFn: () => fetchGenres(mediaType),
   });
 
+  const includeLgbtq = selectedGenreIds.includes(LGBTQ_CHIP_ID);
+  const genreIdsForQuery = selectedGenreIds.filter((id) => id !== LGBTQ_CHIP_ID);
+
   const resultsQuery = useQuery({
     queryKey: query ? ["search", query] : ["discover", mediaType, selectedGenreIds],
     queryFn: () =>
-      query ? searchTitles(query) : discoverTitles(mediaType, selectedGenreIds),
+      query
+        ? searchTitles(query)
+        : discoverTitles(mediaType, genreIdsForQuery, {
+            keywordIds: includeLgbtq ? [LGBTQ_KEYWORD_ID] : [],
+          }),
   });
 
   function toggleGenre(id: number) {
@@ -52,7 +65,7 @@ export function BrowsePage() {
           </div>
           {genresQuery.data && (
             <GenreFilter
-              genres={genresQuery.data.genres}
+              genres={[...genresQuery.data.genres, { id: LGBTQ_CHIP_ID, name: "LGBTQ+" }]}
               selectedIds={selectedGenreIds}
               onToggle={toggleGenre}
             />

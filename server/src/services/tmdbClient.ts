@@ -1,5 +1,5 @@
 import axios from "axios";
-import type { MediaType, TitleDetail, TitleSummary } from "@show-finder/shared";
+import type { MediaType, TitleDetail, TitleSummary, WatchProvider, WatchProviders } from "@show-finder/shared";
 import { env } from "../env";
 
 export const tmdbClient = axios.create({
@@ -38,15 +38,60 @@ export function normalizeSummary(raw: RawTmdbResult, mediaType: MediaType): Titl
   };
 }
 
+interface RawWatchProviderEntry {
+  provider_id: number;
+  provider_name: string;
+  logo_path: string | null;
+}
+
+interface RawWatchProviderRegion {
+  link?: string;
+  flatrate?: RawWatchProviderEntry[];
+  rent?: RawWatchProviderEntry[];
+  buy?: RawWatchProviderEntry[];
+}
+
+export interface RawWatchProvidersResponse {
+  results?: Record<string, RawWatchProviderRegion>;
+}
+
+function normalizeProviderList(entries: RawWatchProviderEntry[] | undefined): WatchProvider[] {
+  return (entries ?? []).map((entry) => ({
+    providerId: entry.provider_id,
+    providerName: entry.provider_name,
+    logoPath: entry.logo_path,
+  }));
+}
+
+export function normalizeWatchProviders(
+  raw: RawWatchProvidersResponse | undefined,
+  countryCode: string,
+): WatchProviders | null {
+  const region = raw?.results?.[countryCode];
+  if (!region) return null;
+
+  return {
+    link: region.link ?? null,
+    flatrate: normalizeProviderList(region.flatrate),
+    rent: normalizeProviderList(region.rent),
+    buy: normalizeProviderList(region.buy),
+  };
+}
+
 export function normalizeDetail(
-  raw: RawTmdbResult & { credits?: { cast?: { id: number; name: string; character: string }[] } },
+  raw: RawTmdbResult & {
+    credits?: { cast?: { id: number; name: string; character: string }[] };
+    "watch/providers"?: RawWatchProvidersResponse;
+  },
   mediaType: MediaType,
+  countryCode: string,
 ): TitleDetail {
   return {
     ...normalizeSummary(raw, mediaType),
     genres: raw.genres ?? [],
     runtime: raw.runtime ?? raw.episode_run_time?.[0] ?? null,
     cast: (raw.credits?.cast ?? []).slice(0, 12),
+    watchProviders: normalizeWatchProviders(raw["watch/providers"], countryCode),
   };
 }
 

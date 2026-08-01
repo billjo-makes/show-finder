@@ -353,6 +353,29 @@ input {
   color: var(--text-muted);
 }
 
+.watch-providers-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0;
+}
+
+.watch-providers-label {
+  color: var(--text-muted);
+  min-width: 56px;
+}
+
+.watch-provider-logo {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+}
+
+.watch-providers-attribution {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
 .title-detail-actions {
   display: flex;
   align-items: center;
@@ -446,6 +469,12 @@ input {
 .account-meta {
   color: var(--text-muted);
   font-size: 14px;
+}
+
+.account-region-hint {
+  color: var(--text-muted);
+  font-size: 13px;
+  margin: 4px 0 12px;
 }
 
 /* Profile switcher (navbar) */

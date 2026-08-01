@@ -13,9 +13,15 @@ export function searchTitles(query: string, page = 1) {
   );
 }
 
-export function discoverTitles(mediaType: MediaType, genreIds: number[], page = 1) {
+export function discoverTitles(
+  mediaType: MediaType,
+  genreIds: number[],
+  options: { page?: number; keywordIds?: number[] } = {},
+) {
+  const { page = 1, keywordIds = [] } = options;
   const params = new URLSearchParams({ mediaType, page: String(page) });
   if (genreIds.length > 0) params.set("genreIds", genreIds.join(","));
+  if (keywordIds.length > 0) params.set("keywordIds", keywordIds.join(","));
   return apiFetch<SearchResponse>(`/api/tmdb/discover?${params.toString()}`);
 }
 

@@ -17,15 +17,30 @@ export interface TitleSummary {
   releaseDate: string | null;
 }
 
+export interface WatchProvider {
+  providerId: number;
+  providerName: string;
+  logoPath: string | null;
+}
+
+export interface WatchProviders {
+  link: string | null;
+  flatrate: WatchProvider[];
+  rent: WatchProvider[];
+  buy: WatchProvider[];
+}
+
 export interface TitleDetail extends TitleSummary {
   genres: Genre[];
   runtime: number | null;
   cast: { id: number; name: string; character: string }[];
+  watchProviders: WatchProviders | null;
 }
 
 export interface AuthUser {
   id: string;
   email: string;
+  country: string;
 }
 
 export interface ProfileDTO {

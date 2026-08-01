@@ -22,3 +22,10 @@ export function logout() {
 export function fetchMe() {
   return apiFetch<AuthResponse>("/api/auth/me");
 }
+
+export function updateCountry(country: string) {
+  return apiFetch<{ user: AuthResponse["user"] }>("/api/auth/me/country", {
+    method: "PATCH",
+    body: JSON.stringify({ country }),
+  });
+}

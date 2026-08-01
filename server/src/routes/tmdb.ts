@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import type { MediaType } from "@show-finder/shared";
+import { prisma } from "../prisma";
 import { requireAuth } from "../middleware/requireAuth";
 import { asyncHandler } from "../utils/asyncHandler";
 import {
@@ -49,10 +50,11 @@ tmdbRouter.get(
 tmdbRouter.get(
   "/discover",
   asyncHandler(async (req, res) => {
-    const { mediaType, genreIds, sortBy, page } = z
+    const { mediaType, genreIds, keywordIds, sortBy, page } = z
       .object({
         mediaType: mediaTypeSchema,
         genreIds: z.string().optional(),
+        keywordIds: z.string().optional(),
         sortBy: z.string().default("popularity.desc"),
         page: z.coerce.number().default(1),
       })
@@ -61,6 +63,7 @@ tmdbRouter.get(
     const { data } = await tmdbClient.get(`/discover/${mediaType}`, {
       params: {
         with_genres: genreIds,
+        with_keywords: keywordIds,
         sort_by: sortBy,
         page,
       },
@@ -109,10 +112,13 @@ tmdbRouter.get(
       .object({ mediaType: mediaTypeSchema, id: z.coerce.number() })
       .parse(req.params);
 
+    const user = await prisma.user.findUnique({ where: { id: req.userId } });
+    const countryCode = user?.country ?? "US";
+
     const { data } = await tmdbClient.get(`/${mediaType}/${id}`, {
-      params: { append_to_response: "credits" },
+      params: { append_to_response: "credits,watch/providers" },
     });
-    res.json(normalizeDetail(data, mediaType));
+    res.json(normalizeDetail(data, mediaType, countryCode));
   }),
 );
 

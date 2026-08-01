@@ -53,7 +53,7 @@ authRouter.post(
     const token = signToken(user.id, profile.id);
     res.cookie(AUTH_COOKIE_NAME, token, authCookieOptions);
     res.status(201).json({
-      user: { id: user.id, email: user.email },
+      user: { id: user.id, email: user.email, country: user.country },
       activeProfile: toProfileDTO(profile),
       profiles: [toProfileDTO(profile)],
     });
@@ -86,7 +86,7 @@ authRouter.post(
     const token = signToken(user.id, activeProfile?.id);
     res.cookie(AUTH_COOKIE_NAME, token, authCookieOptions);
     res.json({
-      user: { id: user.id, email: user.email },
+      user: { id: user.id, email: user.email, country: user.country },
       activeProfile: activeProfile ? toProfileDTO(activeProfile) : null,
       profiles: profiles.map(toProfileDTO),
     });
@@ -115,9 +115,26 @@ authRouter.get(
     const activeProfile = profiles.find((p) => p.id === req.profileId) ?? null;
 
     res.json({
-      user: { id: user.id, email: user.email },
+      user: { id: user.id, email: user.email, country: user.country },
       activeProfile: activeProfile ? toProfileDTO(activeProfile) : null,
       profiles: profiles.map(toProfileDTO),
     });
+  }),
+);
+
+authRouter.patch(
+  "/me/country",
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const { country } = z
+      .object({ country: z.string().regex(/^[A-Z]{2}$/, "Use a 2-letter country code") })
+      .parse(req.body);
+
+    const user = await prisma.user.update({
+      where: { id: req.userId },
+      data: { country },
+    });
+
+    res.json({ user: { id: user.id, email: user.email, country: user.country } });
   }),
 );
