@@ -5,7 +5,7 @@ import { SearchBar } from "../components/SearchBar";
 import { GenreFilter } from "../components/GenreFilter";
 import { WatchProviderFilter } from "../components/WatchProviderFilter";
 import { TitleCard } from "../components/TitleCard";
-import { discoverTitles, fetchGenres, fetchWatchProviders, searchTitles } from "../api/titles";
+import { discoverTitles, fetchGenres, fetchLanguages, fetchWatchProviders, searchTitles } from "../api/titles";
 import { useAuth } from "../auth/AuthContext";
 
 // TMDB has no dedicated LGBTQ+ genre, so this chip filters by keyword instead
@@ -21,6 +21,7 @@ export function BrowsePage() {
   const [selectedProviderIds, setSelectedProviderIds] = useState<number[]>(
     activeProfile?.defaultWatchProviderIds ?? [],
   );
+  const [originalLanguage, setOriginalLanguage] = useState("");
   const [query, setQuery] = useState("");
 
   // Reset to the profile's default services whenever the active profile changes.
@@ -38,19 +39,25 @@ export function BrowsePage() {
     queryFn: () => fetchWatchProviders(mediaType),
   });
 
+  const languagesQuery = useQuery({
+    queryKey: ["languages"],
+    queryFn: fetchLanguages,
+  });
+
   const includeLgbtq = selectedGenreIds.includes(LGBTQ_CHIP_ID);
   const genreIdsForQuery = selectedGenreIds.filter((id) => id !== LGBTQ_CHIP_ID);
 
   const resultsQuery = useQuery({
     queryKey: query
       ? ["search", query]
-      : ["discover", mediaType, selectedGenreIds, selectedProviderIds],
+      : ["discover", mediaType, selectedGenreIds, selectedProviderIds, originalLanguage],
     queryFn: () =>
       query
         ? searchTitles(query)
         : discoverTitles(mediaType, genreIdsForQuery, {
             keywordIds: includeLgbtq ? [LGBTQ_KEYWORD_ID] : [],
             watchProviderIds: selectedProviderIds,
+            originalLanguage: originalLanguage || undefined,
           }),
   });
 
@@ -103,6 +110,23 @@ export function BrowsePage() {
                 selectedIds={selectedProviderIds}
                 onToggle={toggleProvider}
               />
+            </>
+          )}
+          {languagesQuery.data && (
+            <>
+              <p className="filter-label">Original language</p>
+              <select
+                className="language-filter"
+                value={originalLanguage}
+                onChange={(e) => setOriginalLanguage(e.target.value)}
+              >
+                <option value="">Any language</option>
+                {languagesQuery.data.languages.map((language) => (
+                  <option key={language.code} value={language.code}>
+                    {language.name}
+                  </option>
+                ))}
+              </select>
             </>
           )}
         </>

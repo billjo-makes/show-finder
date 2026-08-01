@@ -50,12 +50,13 @@ tmdbRouter.get(
 tmdbRouter.get(
   "/discover",
   asyncHandler(async (req, res) => {
-    const { mediaType, genreIds, keywordIds, watchProviderIds, sortBy, page } = z
+    const { mediaType, genreIds, keywordIds, watchProviderIds, originalLanguage, sortBy, page } = z
       .object({
         mediaType: mediaTypeSchema,
         genreIds: z.string().optional(),
         keywordIds: z.string().optional(),
         watchProviderIds: z.string().optional(),
+        originalLanguage: z.string().optional(),
         sortBy: z.string().default("popularity.desc"),
         page: z.coerce.number().default(1),
       })
@@ -78,6 +79,7 @@ tmdbRouter.get(
         with_keywords: keywordIds,
         with_watch_providers: watchProvidersParam,
         watch_region: watchRegion,
+        with_original_language: originalLanguage,
         sort_by: sortBy,
         page,
       },
@@ -128,6 +130,21 @@ tmdbRouter.get(
         logoPath: p.logo_path,
       }));
     res.json({ providers });
+  }),
+);
+
+tmdbRouter.get(
+  "/languages",
+  asyncHandler(async (_req, res) => {
+    const { data } = await tmdbClient.get("/configuration/languages");
+    const languages = (data ?? [])
+      .filter((l: { iso_639_1: string; english_name: string }) => l.english_name)
+      .map((l: { iso_639_1: string; english_name: string }) => ({
+        code: l.iso_639_1,
+        name: l.english_name,
+      }))
+      .sort((a: { name: string }, b: { name: string }) => a.name.localeCompare(b.name));
+    res.json({ languages });
   }),
 );
 

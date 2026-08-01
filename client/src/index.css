@@ -233,6 +233,11 @@ input {
   color: var(--text-muted);
 }
 
+.language-filter {
+  display: block;
+  margin-bottom: 20px;
+}
+
 /* Title grid / card */
 .title-grid {
   display: grid;

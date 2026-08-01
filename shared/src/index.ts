@@ -5,6 +5,11 @@ export interface Genre {
   name: string;
 }
 
+export interface Language {
+  code: string;
+  name: string;
+}
+
 export interface TitleSummary {
   tmdbId: number;
   mediaType: MediaType;
