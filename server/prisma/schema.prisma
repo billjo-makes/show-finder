@@ -17,14 +17,15 @@ model User {
 }
 
 model Profile {
-  id          String   @id @default(cuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  name        String
-  avatarColor String?
-  createdAt   DateTime @default(now())
-  ratings     Rating[]
-  watchlist   WatchlistEntry[]
+  id                      String   @id @default(cuid())
+  userId                  String
+  user                    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name                    String
+  avatarColor             String?
+  defaultWatchProviderIds String   @default("[]")
+  createdAt               DateTime @default(now())
+  ratings                 Rating[]
+  watchlist               WatchlistEntry[]
 
   @@index([userId])
 }

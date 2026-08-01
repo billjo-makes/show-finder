@@ -50,20 +50,34 @@ tmdbRouter.get(
 tmdbRouter.get(
   "/discover",
   asyncHandler(async (req, res) => {
-    const { mediaType, genreIds, keywordIds, sortBy, page } = z
+    const { mediaType, genreIds, keywordIds, watchProviderIds, sortBy, page } = z
       .object({
         mediaType: mediaTypeSchema,
         genreIds: z.string().optional(),
         keywordIds: z.string().optional(),
+        watchProviderIds: z.string().optional(),
         sortBy: z.string().default("popularity.desc"),
         page: z.coerce.number().default(1),
       })
       .parse(req.query);
 
+    // TMDB requires a region whenever with_watch_providers is set.
+    let watchRegion: string | undefined;
+    if (watchProviderIds) {
+      const user = await prisma.user.findUnique({ where: { id: req.userId } });
+      watchRegion = user?.country ?? "US";
+    }
+
+    // TMDB uses "," for AND and "|" for OR; provider chips should be OR'd
+    // together (any selected service), unlike genres which are AND'd.
+    const watchProvidersParam = watchProviderIds?.split(",").join("|");
+
     const { data } = await tmdbClient.get(`/discover/${mediaType}`, {
       params: {
         with_genres: genreIds,
         with_keywords: keywordIds,
+        with_watch_providers: watchProvidersParam,
+        watch_region: watchRegion,
         sort_by: sortBy,
         page,
       },
@@ -93,6 +107,27 @@ tmdbRouter.get(
       })
       .filter(Boolean);
     res.json({ results });
+  }),
+);
+
+tmdbRouter.get(
+  "/watch-providers",
+  asyncHandler(async (req, res) => {
+    const { mediaType } = z.object({ mediaType: mediaTypeSchema }).parse(req.query);
+    const user = await prisma.user.findUnique({ where: { id: req.userId } });
+    const countryCode = user?.country ?? "US";
+
+    const { data } = await tmdbClient.get(`/watch/providers/${mediaType}`, {
+      params: { watch_region: countryCode },
+    });
+    const providers = (data.results ?? [])
+      .sort((a: { display_priority: number }, b: { display_priority: number }) => a.display_priority - b.display_priority)
+      .map((p: { provider_id: number; provider_name: string; logo_path: string | null }) => ({
+        providerId: p.provider_id,
+        providerName: p.provider_name,
+        logoPath: p.logo_path,
+      }));
+    res.json({ providers });
   }),
 );
 

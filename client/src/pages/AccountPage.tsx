@@ -1,7 +1,12 @@
+import { useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
+import type { WatchProvider } from "@show-finder/shared";
 import { deleteRating, fetchRatings } from "../api/ratings";
+import { fetchWatchProviders } from "../api/titles";
+import { updateProfile } from "../api/profiles";
 import { useAuth } from "../auth/AuthContext";
+import { WatchProviderFilter } from "../components/WatchProviderFilter";
 
 const POSTER_BASE = "https://image.tmdb.org/t/p/w154";
 
@@ -24,7 +29,42 @@ const COUNTRY_OPTIONS = [
 
 export function AccountPage() {
   const queryClient = useQueryClient();
-  const { user, activeProfile, updateCountry } = useAuth();
+  const { user, activeProfile, updateCountry, refreshProfiles } = useAuth();
+
+  const movieProvidersQuery = useQuery({
+    queryKey: ["watch-providers", "movie"],
+    queryFn: () => fetchWatchProviders("movie"),
+  });
+  const tvProvidersQuery = useQuery({
+    queryKey: ["watch-providers", "tv"],
+    queryFn: () => fetchWatchProviders("tv"),
+  });
+  const allProviders = useMemo(() => {
+    // Both lists already come from the server sorted by popularity; append
+    // TV-only providers after the movie list so that ordering is preserved.
+    const byId = new Map<number, WatchProvider>();
+    for (const p of movieProvidersQuery.data?.providers ?? []) byId.set(p.providerId, p);
+    for (const p of tvProvidersQuery.data?.providers ?? []) {
+      if (!byId.has(p.providerId)) byId.set(p.providerId, p);
+    }
+    return [...byId.values()];
+  }, [movieProvidersQuery.data, tvProvidersQuery.data]);
+
+  const defaultProvidersMutation = useMutation({
+    mutationFn: (defaultWatchProviderIds: number[]) =>
+      updateProfile(activeProfile!.id, { defaultWatchProviderIds }),
+    onSuccess: () => refreshProfiles(),
+  });
+
+  function toggleDefaultProvider(providerId: number) {
+    if (!activeProfile) return;
+    const current = activeProfile.defaultWatchProviderIds;
+    const next = current.includes(providerId)
+      ? current.filter((id) => id !== providerId)
+      : [...current, providerId];
+    defaultProvidersMutation.mutate(next);
+  }
+
   const ratingsQuery = useQuery({
     queryKey: ["ratings", activeProfile?.id],
     queryFn: fetchRatings,
@@ -66,6 +106,18 @@ export function AccountPage() {
           </option>
         ))}
       </select>
+
+      <h2>Default Streaming Services</h2>
+      <p className="account-region-hint">
+        Pre-select these services when Browse loads for {activeProfile?.name ?? "this profile"}.
+      </p>
+      {allProviders.length > 0 && activeProfile && (
+        <WatchProviderFilter
+          providers={allProviders}
+          selectedIds={activeProfile.defaultWatchProviderIds}
+          onToggle={toggleDefaultProvider}
+        />
+      )}
 
       <h2>My Ratings</h2>
       {ratingsQuery.isLoading && <p>Loading…</p>}

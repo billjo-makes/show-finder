@@ -9,11 +9,18 @@ import { asyncHandler } from "../utils/asyncHandler";
 export const profilesRouter = Router();
 profilesRouter.use(requireAuth);
 
-function toDTO(profile: { id: string; name: string; avatarColor: string | null; createdAt: Date }): ProfileDTO {
+function toDTO(profile: {
+  id: string;
+  name: string;
+  avatarColor: string | null;
+  defaultWatchProviderIds: string;
+  createdAt: Date;
+}): ProfileDTO {
   return {
     id: profile.id,
     name: profile.name,
     avatarColor: profile.avatarColor,
+    defaultWatchProviderIds: JSON.parse(profile.defaultWatchProviderIds) as number[],
     createdAt: profile.createdAt.toISOString(),
   };
 }
@@ -21,6 +28,7 @@ function toDTO(profile: { id: string; name: string; avatarColor: string | null; 
 const profileSchema = z.object({
   name: z.string().min(1).max(50),
   avatarColor: z.string().nullable().optional(),
+  defaultWatchProviderIds: z.array(z.number()).optional(),
 });
 
 profilesRouter.get(
@@ -39,7 +47,12 @@ profilesRouter.post(
   asyncHandler(async (req, res) => {
     const body = profileSchema.parse(req.body);
     const profile = await prisma.profile.create({
-      data: { userId: req.userId!, name: body.name, avatarColor: body.avatarColor ?? null },
+      data: {
+        userId: req.userId!,
+        name: body.name,
+        avatarColor: body.avatarColor ?? null,
+        defaultWatchProviderIds: JSON.stringify(body.defaultWatchProviderIds ?? []),
+      },
     });
     res.status(201).json({ profile: toDTO(profile) });
   }),
@@ -59,7 +72,11 @@ profilesRouter.patch(
 
     const profile = await prisma.profile.update({
       where: { id },
-      data: { name: body.name, avatarColor: body.avatarColor },
+      data: {
+        name: body.name,
+        avatarColor: body.avatarColor,
+        defaultWatchProviderIds: JSON.stringify(body.defaultWatchProviderIds),
+      },
     });
     res.json({ profile: toDTO(profile) });
   }),

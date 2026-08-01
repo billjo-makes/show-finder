@@ -47,6 +47,7 @@ export interface ProfileDTO {
   id: string;
   name: string;
   avatarColor: string | null;
+  defaultWatchProviderIds: number[];
   createdAt: string;
 }
 

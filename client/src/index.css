@@ -193,6 +193,46 @@ input {
   color: var(--accent);
 }
 
+.filter-label {
+  color: var(--text-muted);
+  font-size: 13px;
+  margin: 0 0 8px;
+}
+
+.provider-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.provider-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  padding: 4px 14px 4px 6px;
+  font-size: 13px;
+}
+
+.provider-chip-logo {
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  display: block;
+}
+
+.provider-chip-active {
+  background: var(--accent-bg);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.provider-chip-toggle {
+  border-style: dashed;
+  color: var(--text-muted);
+}
+
 /* Title grid / card */
 .title-grid {
   display: grid;

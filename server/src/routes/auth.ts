@@ -23,12 +23,14 @@ function toProfileDTO(profile: {
   id: string;
   name: string;
   avatarColor: string | null;
+  defaultWatchProviderIds: string;
   createdAt: Date;
 }): ProfileDTO {
   return {
     id: profile.id,
     name: profile.name,
     avatarColor: profile.avatarColor,
+    defaultWatchProviderIds: JSON.parse(profile.defaultWatchProviderIds) as number[],
     createdAt: profile.createdAt.toISOString(),
   };
 }

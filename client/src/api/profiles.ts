@@ -4,6 +4,7 @@ import { apiFetch } from "./client";
 export interface ProfileInput {
   name: string;
   avatarColor?: string | null;
+  defaultWatchProviderIds?: number[];
 }
 
 export function listProfiles() {
@@ -17,7 +18,7 @@ export function createProfile(input: ProfileInput) {
   });
 }
 
-export function renameProfile(id: string, input: Partial<ProfileInput>) {
+export function updateProfile(id: string, input: Partial<ProfileInput>) {
   return apiFetch<{ profile: ProfileDTO }>(`/api/profiles/${id}`, {
     method: "PATCH",
     body: JSON.stringify(input),

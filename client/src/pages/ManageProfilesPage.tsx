@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { useAuth } from "../auth/AuthContext";
-import { createProfile, deleteProfile, renameProfile } from "../api/profiles";
+import { createProfile, deleteProfile, updateProfile } from "../api/profiles";
 import { ApiError } from "../api/client";
 
 export function ManageProfilesPage() {
@@ -30,7 +30,7 @@ export function ManageProfilesPage() {
     e.preventDefault();
     setError(null);
     try {
-      await renameProfile(id, { name: editingName });
+      await updateProfile(id, { name: editingName });
       setEditingId(null);
       await refreshProfiles();
     } catch (err) {
