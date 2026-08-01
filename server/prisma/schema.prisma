@@ -23,6 +23,7 @@ model Profile {
   avatarColor String?
   createdAt   DateTime @default(now())
   ratings     Rating[]
+  watchlist   WatchlistEntry[]
 
   @@index([userId])
 }
@@ -39,6 +40,21 @@ model Rating {
   genreIds   String
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
+
+  @@unique([profileId, tmdbId, mediaType])
+  @@index([profileId])
+}
+
+model WatchlistEntry {
+  id         String   @id @default(cuid())
+  profileId  String
+  profile    Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  tmdbId     Int
+  mediaType  String // "movie" | "tv"
+  title      String
+  posterPath String?
+  genreIds   String
+  createdAt  DateTime @default(now())
 
   @@unique([profileId, tmdbId, mediaType])
   @@index([profileId])

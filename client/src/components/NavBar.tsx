@@ -46,6 +46,7 @@ export function NavBar() {
           Browse
         </NavLink>
         <NavLink to="/for-you">For You</NavLink>
+        <NavLink to="/watchlist">Watch List</NavLink>
         <NavLink to="/account">Account</NavLink>
       </div>
       <div className="navbar-actions">

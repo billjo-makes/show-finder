@@ -3,9 +3,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { MediaType } from "@show-finder/shared";
 import { fetchSimilarTitles, fetchTitleDetail } from "../api/titles";
 import { fetchRatings, rateTitle } from "../api/ratings";
+import { addToWatchlist, fetchWatchlist, removeFromWatchlist } from "../api/watchlist";
 import { useAuth } from "../auth/AuthContext";
 import { RatingControl } from "../components/RatingControl";
 import { TitleCard } from "../components/TitleCard";
+import { WatchlistButton } from "../components/WatchlistButton";
 
 const POSTER_BASE = "https://image.tmdb.org/t/p/w500";
 
@@ -36,11 +38,35 @@ export function TitleDetailPage() {
     (r) => r.tmdbId === tmdbId && r.mediaType === mediaType,
   );
 
+  const watchlistQuery = useQuery({
+    queryKey: ["watchlist", activeProfile?.id],
+    queryFn: fetchWatchlist,
+    enabled: Boolean(activeProfile),
+  });
+  const watchlistEntry = watchlistQuery.data?.entries.find(
+    (e) => e.tmdbId === tmdbId && e.mediaType === mediaType,
+  );
+
   const rateMutation = useMutation({
     mutationFn: rateTitle,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["ratings", activeProfile?.id] });
       queryClient.invalidateQueries({ queryKey: ["recommendations", activeProfile?.id] });
+      queryClient.invalidateQueries({ queryKey: ["watchlist", activeProfile?.id] });
+    },
+  });
+
+  const addWatchlistMutation = useMutation({
+    mutationFn: addToWatchlist,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["watchlist", activeProfile?.id] });
+    },
+  });
+
+  const removeWatchlistMutation = useMutation({
+    mutationFn: removeFromWatchlist,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["watchlist", activeProfile?.id] });
     },
   });
 
@@ -60,6 +86,20 @@ export function TitleDetailPage() {
     });
   }
 
+  function handleToggleWatchlist() {
+    if (watchlistEntry) {
+      removeWatchlistMutation.mutate(watchlistEntry.id);
+    } else {
+      addWatchlistMutation.mutate({
+        tmdbId: title.tmdbId,
+        mediaType: title.mediaType,
+        title: title.title,
+        posterPath: title.posterPath,
+        genreIds: title.genres.map((g) => g.id),
+      });
+    }
+  }
+
   return (
     <div className="page title-detail">
       <div className="title-detail-header">
@@ -71,7 +111,19 @@ export function TitleDetailPage() {
             {title.runtime ? ` · ${title.runtime} min` : ""}
           </p>
           <p>{title.overview}</p>
-          <RatingControl value={existingRating?.value ?? 0} onChange={handleRate} />
+          <div className="title-detail-actions">
+            <RatingControl value={existingRating?.value ?? 0} onChange={handleRate} />
+            <WatchlistButton
+              onWatchlist={Boolean(watchlistEntry)}
+              onToggle={handleToggleWatchlist}
+              disabled={addWatchlistMutation.isPending || removeWatchlistMutation.isPending}
+            />
+          </div>
+          {existingRating && (
+            <p className="title-detail-rated-on">
+              Rated on {new Date(existingRating.updatedAt).toLocaleDateString()}
+            </p>
+          )}
         </div>
       </div>
 

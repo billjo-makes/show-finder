@@ -14,11 +14,11 @@ export interface TitleSummary {
   genreIds: number[];
   popularity: number;
   voteAverage: number;
+  releaseDate: string | null;
 }
 
 export interface TitleDetail extends TitleSummary {
   genres: Genre[];
-  releaseDate: string | null;
   runtime: number | null;
   cast: { id: number; name: string; character: string }[];
 }
@@ -51,6 +51,16 @@ export interface RatingDTO {
   genreIds: number[];
   createdAt: string;
   updatedAt: string;
+}
+
+export interface WatchlistEntryDTO {
+  id: string;
+  tmdbId: number;
+  mediaType: MediaType;
+  title: string;
+  posterPath: string | null;
+  genreIds: number[];
+  createdAt: string;
 }
 
 export interface RecommendationsResponse {

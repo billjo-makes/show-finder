@@ -34,6 +34,7 @@ export function normalizeSummary(raw: RawTmdbResult, mediaType: MediaType): Titl
     genreIds: raw.genre_ids ?? raw.genres?.map((g) => g.id) ?? [],
     popularity: raw.popularity,
     voteAverage: raw.vote_average,
+    releaseDate: raw.release_date ?? raw.first_air_date ?? null,
   };
 }
 
@@ -44,7 +45,6 @@ export function normalizeDetail(
   return {
     ...normalizeSummary(raw, mediaType),
     genres: raw.genres ?? [],
-    releaseDate: raw.release_date ?? raw.first_air_date ?? null,
     runtime: raw.runtime ?? raw.episode_run_time?.[0] ?? null,
     cast: (raw.credits?.cast ?? []).slice(0, 12),
   };

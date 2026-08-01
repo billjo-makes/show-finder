@@ -8,6 +8,7 @@ import { tmdbRouter } from "./routes/tmdb";
 import { ratingsRouter } from "./routes/ratings";
 import { recommendationsRouter } from "./routes/recommendations";
 import { profilesRouter } from "./routes/profiles";
+import { watchlistRouter } from "./routes/watchlist";
 
 export function createApp() {
   const app = express();
@@ -44,6 +45,7 @@ export function createApp() {
   app.use("/api/ratings", ratingsRouter);
   app.use("/api/recommendations", recommendationsRouter);
   app.use("/api/profiles", profilesRouter);
+  app.use("/api/watchlist", watchlistRouter);
 
   app.use(errorHandler);
 

@@ -47,30 +47,36 @@ ratingsRouter.post(
     const body = upsertSchema.parse(req.body);
     const profileId = req.profileId!;
 
-    const rating = await prisma.rating.upsert({
-      where: {
-        profileId_tmdbId_mediaType: {
+    const [rating] = await prisma.$transaction([
+      prisma.rating.upsert({
+        where: {
+          profileId_tmdbId_mediaType: {
+            profileId,
+            tmdbId: body.tmdbId,
+            mediaType: body.mediaType,
+          },
+        },
+        update: {
+          value: body.value,
+          title: body.title,
+          posterPath: body.posterPath,
+          genreIds: JSON.stringify(body.genreIds),
+        },
+        create: {
           profileId,
           tmdbId: body.tmdbId,
           mediaType: body.mediaType,
+          value: body.value,
+          title: body.title,
+          posterPath: body.posterPath,
+          genreIds: JSON.stringify(body.genreIds),
         },
-      },
-      update: {
-        value: body.value,
-        title: body.title,
-        posterPath: body.posterPath,
-        genreIds: JSON.stringify(body.genreIds),
-      },
-      create: {
-        profileId,
-        tmdbId: body.tmdbId,
-        mediaType: body.mediaType,
-        value: body.value,
-        title: body.title,
-        posterPath: body.posterPath,
-        genreIds: JSON.stringify(body.genreIds),
-      },
-    });
+      }),
+      // Rating a title means it's been watched, so it no longer belongs on the watch list.
+      prisma.watchlistEntry.deleteMany({
+        where: { profileId, tmdbId: body.tmdbId, mediaType: body.mediaType },
+      }),
+    ]);
 
     res.status(201).json({ rating: toDTO(rating) });
   }),

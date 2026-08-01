@@ -226,6 +226,10 @@ input {
   display: block;
 }
 
+.title-card-poster-wrap:hover .title-card-poster {
+  border-color: var(--accent);
+}
+
 .title-card-poster-fallback {
   display: flex;
   align-items: center;
@@ -266,12 +270,12 @@ input {
 .title-card-poster-wrap:hover .title-card-rating-overlay,
 .title-card-poster-wrap:focus-within .title-card-rating-overlay {
   opacity: 1;
-  pointer-events: auto;
 }
 
 .title-card-rating-overlay .rating-control {
   margin-top: 0;
   gap: 2px;
+  pointer-events: auto;
 }
 
 .title-card-rating-overlay .rating-control .star {
@@ -283,12 +287,47 @@ input {
   color: var(--star);
 }
 
+.watchlist-button {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  z-index: 2;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+}
+
+.watchlist-button-active {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.watchlist-button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
 .title-card-name {
   display: block;
   margin-top: 6px;
   font-size: 14px;
   color: var(--text);
   text-decoration: none;
+}
+
+.title-card-year {
+  color: var(--text-muted);
+  font-size: 13px;
 }
 
 /* Title detail */
@@ -312,6 +351,34 @@ input {
 
 .cast-list {
   color: var(--text-muted);
+}
+
+.title-detail-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.title-detail-actions .watchlist-button {
+  position: static;
+  width: 36px;
+  height: 36px;
+  font-size: 18px;
+  border-color: var(--border);
+  background: var(--card-bg);
+  color: var(--text);
+}
+
+.title-detail-actions .watchlist-button-active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.title-detail-rated-on {
+  color: var(--text-muted);
+  font-size: 13px;
+  margin-top: 4px;
 }
 
 /* Rating control */

@@ -6,6 +6,7 @@ import { RegisterPage } from "./pages/RegisterPage";
 import { BrowsePage } from "./pages/BrowsePage";
 import { TitleDetailPage } from "./pages/TitleDetailPage";
 import { ForYouPage } from "./pages/ForYouPage";
+import { WatchlistPage } from "./pages/WatchlistPage";
 import { AccountPage } from "./pages/AccountPage";
 import { ProfilePickerPage } from "./pages/ProfilePickerPage";
 import { ManageProfilesPage } from "./pages/ManageProfilesPage";
@@ -38,6 +39,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <ForYouPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/watchlist"
+          element={
+            <ProtectedRoute>
+              <WatchlistPage />
             </ProtectedRoute>
           }
         />
