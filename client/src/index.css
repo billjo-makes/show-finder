@@ -233,9 +233,18 @@ input {
   color: var(--text-muted);
 }
 
-.language-filter {
-  display: block;
+.filter-row {
+  display: flex;
+  gap: 24px;
   margin-bottom: 20px;
+}
+
+.filter-group .filter-label {
+  margin-bottom: 8px;
+}
+
+.select-filter {
+  display: block;
 }
 
 /* Title grid / card */
@@ -394,6 +403,25 @@ input {
   margin: 8px 0;
 }
 
+.external-ratings-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 8px 0;
+}
+
+.external-rating-badge {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.external-rating-badge strong {
+  color: var(--text);
+}
+
 .cast-list {
   color: var(--text-muted);
 }
@@ -527,6 +555,7 @@ input {
   position: relative;
   padding-top: 8px;
   padding-bottom: 8px;
+  padding-right: 8px;
 }
 
 .navbar-profile-name {
@@ -542,7 +571,9 @@ input {
   display: none;
   position: absolute;
   top: 100%;
-  right: 0;
+  /* Offsets the dropdown's own padding (8px) plus its items' left padding
+     (8px) so the item text lines up with the trigger text above it. */
+  left: -16px;
   padding: 8px;
   background: var(--card-bg);
   border: 1px solid var(--border);

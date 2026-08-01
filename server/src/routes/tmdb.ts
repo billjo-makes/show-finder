@@ -10,11 +10,16 @@ import {
   resolveMediaTypeFromMulti,
   tmdbClient,
 } from "../services/tmdbClient";
+import { fetchExternalRatings } from "../services/omdbClient";
 
 export const tmdbRouter = Router();
 tmdbRouter.use(requireAuth);
 
 const mediaTypeSchema = z.enum(["movie", "tv"]);
+
+// Filters out low-sample titles (e.g. 1 vote at 10.0) whenever a minimum
+// rating filter is applied, so the score floor is actually meaningful.
+const MIN_VOTE_COUNT_FOR_RATING_FILTER = 50;
 
 tmdbRouter.get(
   "/search",
@@ -50,17 +55,19 @@ tmdbRouter.get(
 tmdbRouter.get(
   "/discover",
   asyncHandler(async (req, res) => {
-    const { mediaType, genreIds, keywordIds, watchProviderIds, originalLanguage, sortBy, page } = z
-      .object({
-        mediaType: mediaTypeSchema,
-        genreIds: z.string().optional(),
-        keywordIds: z.string().optional(),
-        watchProviderIds: z.string().optional(),
-        originalLanguage: z.string().optional(),
-        sortBy: z.string().default("popularity.desc"),
-        page: z.coerce.number().default(1),
-      })
-      .parse(req.query);
+    const { mediaType, genreIds, keywordIds, watchProviderIds, originalLanguage, minRating, sortBy, page } =
+      z
+        .object({
+          mediaType: mediaTypeSchema,
+          genreIds: z.string().optional(),
+          keywordIds: z.string().optional(),
+          watchProviderIds: z.string().optional(),
+          originalLanguage: z.string().optional(),
+          minRating: z.coerce.number().min(0).max(10).optional(),
+          sortBy: z.string().default("popularity.desc"),
+          page: z.coerce.number().default(1),
+        })
+        .parse(req.query);
 
     // TMDB requires a region whenever with_watch_providers is set.
     let watchRegion: string | undefined;
@@ -80,6 +87,10 @@ tmdbRouter.get(
         with_watch_providers: watchProvidersParam,
         watch_region: watchRegion,
         with_original_language: originalLanguage,
+        "vote_average.gte": minRating,
+        // Without a vote-count floor, a title with 2 votes at 9.0 would
+        // outrank a well-reviewed title with thousands of votes at 7.5.
+        "vote_count.gte": minRating !== undefined ? MIN_VOTE_COUNT_FOR_RATING_FILTER : undefined,
         sort_by: sortBy,
         page,
       },
@@ -168,9 +179,14 @@ tmdbRouter.get(
     const countryCode = user?.country ?? "US";
 
     const { data } = await tmdbClient.get(`/${mediaType}/${id}`, {
-      params: { append_to_response: "credits,watch/providers" },
+      params: { append_to_response: "credits,watch/providers,external_ids" },
     });
-    res.json(normalizeDetail(data, mediaType, countryCode));
+
+    // Movies expose imdb_id directly; TV only has it under external_ids.
+    const imdbId: string | null = data.imdb_id ?? data.external_ids?.imdb_id ?? null;
+    const externalRatings = await fetchExternalRatings(imdbId);
+
+    res.json({ ...normalizeDetail(data, mediaType, countryCode), externalRatings });
   }),
 );
 

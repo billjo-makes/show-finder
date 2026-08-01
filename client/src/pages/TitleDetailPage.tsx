@@ -111,6 +111,15 @@ export function TitleDetailPage() {
             {title.releaseDate?.slice(0, 4)} · {title.genres.map((g) => g.name).join(", ")}
             {title.runtime ? ` · ${title.runtime} min` : ""}
           </p>
+          {title.externalRatings.length > 0 && (
+            <p className="external-ratings-row">
+              {title.externalRatings.map((rating) => (
+                <span key={rating.source} className="external-rating-badge">
+                  <strong>{rating.source}</strong> {rating.value}
+                </span>
+              ))}
+            </p>
+          )}
           <p>{title.overview}</p>
           <div className="title-detail-actions">
             <RatingControl value={existingRating?.value ?? 0} onChange={handleRate} />

@@ -85,7 +85,7 @@ export function normalizeDetail(
   },
   mediaType: MediaType,
   countryCode: string,
-): TitleDetail {
+): Omit<TitleDetail, "externalRatings"> {
   return {
     ...normalizeSummary(raw, mediaType),
     genres: raw.genres ?? [],

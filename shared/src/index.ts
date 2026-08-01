@@ -35,11 +35,17 @@ export interface WatchProviders {
   buy: WatchProvider[];
 }
 
+export interface ExternalRating {
+  source: string;
+  value: string;
+}
+
 export interface TitleDetail extends TitleSummary {
   genres: Genre[];
   runtime: number | null;
   cast: { id: number; name: string; character: string }[];
   watchProviders: WatchProviders | null;
+  externalRatings: ExternalRating[];
 }
 
 export interface AuthUser {

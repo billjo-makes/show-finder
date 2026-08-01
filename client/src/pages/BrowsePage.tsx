@@ -14,6 +14,8 @@ import { useAuth } from "../auth/AuthContext";
 const LGBTQ_CHIP_ID = -1;
 const LGBTQ_KEYWORD_ID = 158718;
 
+const MIN_RATING_OPTIONS = [6, 7, 8, 9];
+
 export function BrowsePage() {
   const { activeProfile } = useAuth();
   const [mediaType, setMediaType] = useState<MediaType>("movie");
@@ -22,6 +24,7 @@ export function BrowsePage() {
     activeProfile?.defaultWatchProviderIds ?? [],
   );
   const [originalLanguage, setOriginalLanguage] = useState("");
+  const [minRating, setMinRating] = useState("");
   const [query, setQuery] = useState("");
 
   // Reset to the profile's default services whenever the active profile changes.
@@ -50,7 +53,7 @@ export function BrowsePage() {
   const resultsQuery = useQuery({
     queryKey: query
       ? ["search", query]
-      : ["discover", mediaType, selectedGenreIds, selectedProviderIds, originalLanguage],
+      : ["discover", mediaType, selectedGenreIds, selectedProviderIds, originalLanguage, minRating],
     queryFn: () =>
       query
         ? searchTitles(query)
@@ -58,6 +61,7 @@ export function BrowsePage() {
             keywordIds: includeLgbtq ? [LGBTQ_KEYWORD_ID] : [],
             watchProviderIds: selectedProviderIds,
             originalLanguage: originalLanguage || undefined,
+            minRating: minRating ? Number(minRating) : undefined,
           }),
   });
 
@@ -112,23 +116,40 @@ export function BrowsePage() {
               />
             </>
           )}
-          {languagesQuery.data && (
-            <>
-              <p className="filter-label">Original language</p>
+          <div className="filter-row">
+            {languagesQuery.data && (
+              <div className="filter-group">
+                <p className="filter-label">Original language</p>
+                <select
+                  className="select-filter"
+                  value={originalLanguage}
+                  onChange={(e) => setOriginalLanguage(e.target.value)}
+                >
+                  <option value="">Any language</option>
+                  {languagesQuery.data.languages.map((language) => (
+                    <option key={language.code} value={language.code}>
+                      {language.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+            <div className="filter-group">
+              <p className="filter-label">Minimum rating</p>
               <select
-                className="language-filter"
-                value={originalLanguage}
-                onChange={(e) => setOriginalLanguage(e.target.value)}
+                className="select-filter"
+                value={minRating}
+                onChange={(e) => setMinRating(e.target.value)}
               >
-                <option value="">Any language</option>
-                {languagesQuery.data.languages.map((language) => (
-                  <option key={language.code} value={language.code}>
-                    {language.name}
+                <option value="">Any rating</option>
+                {MIN_RATING_OPTIONS.map((rating) => (
+                  <option key={rating} value={rating}>
+                    {rating}+
                   </option>
                 ))}
               </select>
-            </>
-          )}
+            </div>
+          </div>
         </>
       )}
 
