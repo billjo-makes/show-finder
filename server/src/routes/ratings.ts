@@ -2,10 +2,11 @@ import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../prisma";
 import { requireAuth } from "../middleware/requireAuth";
+import { requireProfile } from "../middleware/requireProfile";
 import { asyncHandler } from "../utils/asyncHandler";
 
 export const ratingsRouter = Router();
-ratingsRouter.use(requireAuth);
+ratingsRouter.use(requireAuth, requireProfile);
 
 function toDTO(rating: {
   id: string;
@@ -44,12 +45,12 @@ ratingsRouter.post(
   "/",
   asyncHandler(async (req, res) => {
     const body = upsertSchema.parse(req.body);
-    const userId = req.userId!;
+    const profileId = req.profileId!;
 
     const rating = await prisma.rating.upsert({
       where: {
-        userId_tmdbId_mediaType: {
-          userId,
+        profileId_tmdbId_mediaType: {
+          profileId,
           tmdbId: body.tmdbId,
           mediaType: body.mediaType,
         },
@@ -61,7 +62,7 @@ ratingsRouter.post(
         genreIds: JSON.stringify(body.genreIds),
       },
       create: {
-        userId,
+        profileId,
         tmdbId: body.tmdbId,
         mediaType: body.mediaType,
         value: body.value,
@@ -79,7 +80,7 @@ ratingsRouter.get(
   "/",
   asyncHandler(async (req, res) => {
     const ratings = await prisma.rating.findMany({
-      where: { userId: req.userId! },
+      where: { profileId: req.profileId! },
       orderBy: { updatedAt: "desc" },
     });
     res.json({ ratings: ratings.map(toDTO) });
@@ -92,7 +93,7 @@ ratingsRouter.delete(
     const { id } = z.object({ id: z.string() }).parse(req.params);
 
     const rating = await prisma.rating.findUnique({ where: { id } });
-    if (!rating || rating.userId !== req.userId) {
+    if (!rating || rating.profileId !== req.profileId) {
       res.status(404).json({ error: "Rating not found" });
       return;
     }

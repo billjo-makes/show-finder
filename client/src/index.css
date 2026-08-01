@@ -374,3 +374,137 @@ input {
 .ratings-list-info span {
   color: var(--star);
 }
+
+.account-meta {
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+/* Profile switcher (navbar) */
+.navbar-profile-switcher {
+  position: relative;
+}
+
+.navbar-profile-name {
+  font-weight: 600;
+  cursor: default;
+}
+
+.navbar-profile-dropdown {
+  display: none;
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 8px;
+  padding: 8px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  min-width: 160px;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 10;
+}
+
+.navbar-profile-switcher:hover .navbar-profile-dropdown,
+.navbar-profile-switcher:focus-within .navbar-profile-dropdown {
+  display: flex;
+}
+
+.navbar-profile-dropdown button,
+.navbar-profile-dropdown a {
+  text-align: left;
+  border: none;
+  background: none;
+  padding: 6px 8px;
+  border-radius: 4px;
+  color: var(--text);
+}
+
+.navbar-profile-dropdown button:hover,
+.navbar-profile-dropdown a:hover {
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+
+/* Profile picker */
+.profile-picker {
+  text-align: center;
+}
+
+.profile-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px;
+  margin-top: 24px;
+}
+
+.profile-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 120px;
+  padding: 16px 8px;
+  border-radius: 8px;
+}
+
+.profile-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: 700;
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+
+.profile-tile-add {
+  color: var(--text-muted);
+}
+
+.profile-tile-form {
+  gap: 6px;
+}
+
+.profile-tile-form input {
+  width: 100%;
+}
+
+/* Manage profiles */
+.profile-manage-list {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 16px 0;
+}
+
+.profile-manage-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+
+.profile-manage-item span {
+  flex: 1;
+}
+
+.profile-manage-item form {
+  display: flex;
+  flex: 1;
+  gap: 8px;
+}
+
+.profile-create-form {
+  display: flex;
+  gap: 8px;
+}

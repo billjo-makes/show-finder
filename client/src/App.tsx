@@ -6,7 +6,9 @@ import { RegisterPage } from "./pages/RegisterPage";
 import { BrowsePage } from "./pages/BrowsePage";
 import { TitleDetailPage } from "./pages/TitleDetailPage";
 import { ForYouPage } from "./pages/ForYouPage";
-import { ProfilePage } from "./pages/ProfilePage";
+import { AccountPage } from "./pages/AccountPage";
+import { ProfilePickerPage } from "./pages/ProfilePickerPage";
+import { ManageProfilesPage } from "./pages/ManageProfilesPage";
 
 export default function App() {
   return (
@@ -40,10 +42,26 @@ export default function App() {
           }
         />
         <Route
-          path="/profile"
+          path="/account"
           element={
             <ProtectedRoute>
-              <ProfilePage />
+              <AccountPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profiles/select"
+          element={
+            <ProtectedRoute requireProfile={false}>
+              <ProfilePickerPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profiles"
+          element={
+            <ProtectedRoute requireProfile={false}>
+              <ManageProfilesPage />
             </ProtectedRoute>
           }
         />

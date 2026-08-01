@@ -28,6 +28,19 @@ export interface AuthUser {
   email: string;
 }
 
+export interface ProfileDTO {
+  id: string;
+  name: string;
+  avatarColor: string | null;
+  createdAt: string;
+}
+
+export interface AuthResponse {
+  user: AuthUser;
+  activeProfile: ProfileDTO | null;
+  profiles: ProfileDTO[];
+}
+
 export interface RatingDTO {
   id: string;
   tmdbId: number;

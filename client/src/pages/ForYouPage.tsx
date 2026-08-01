@@ -2,14 +2,17 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import type { MediaType } from "@show-finder/shared";
 import { fetchRecommendations } from "../api/ratings";
+import { useAuth } from "../auth/AuthContext";
 import { TitleCard } from "../components/TitleCard";
 
 export function ForYouPage() {
   const [mediaType, setMediaType] = useState<MediaType>("movie");
+  const { activeProfile } = useAuth();
 
   const recommendationsQuery = useQuery({
-    queryKey: ["recommendations", mediaType],
+    queryKey: ["recommendations", activeProfile?.id, mediaType],
     queryFn: () => fetchRecommendations(mediaType),
+    enabled: Boolean(activeProfile),
   });
 
   return (

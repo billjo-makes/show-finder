@@ -8,17 +8,29 @@ generator client {
 }
 
 model User {
-  id           String   @id @default(cuid())
-  email        String   @unique
+  id           String    @id @default(cuid())
+  email        String    @unique
   passwordHash String
-  createdAt    DateTime @default(now())
-  ratings      Rating[]
+  createdAt    DateTime  @default(now())
+  profiles     Profile[]
+}
+
+model Profile {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  avatarColor String?
+  createdAt   DateTime @default(now())
+  ratings     Rating[]
+
+  @@index([userId])
 }
 
 model Rating {
   id         String    @id @default(cuid())
-  userId     String
-  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  profileId  String
+  profile    Profile   @relation(fields: [profileId], references: [id], onDelete: Cascade)
   tmdbId     Int
   mediaType  String // "movie" | "tv"
   value      Int
@@ -28,6 +40,6 @@ model Rating {
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
 
-  @@unique([userId, tmdbId, mediaType])
-  @@index([userId])
+  @@unique([profileId, tmdbId, mediaType])
+  @@index([profileId])
 }

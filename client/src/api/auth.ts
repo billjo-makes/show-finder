@@ -1,15 +1,15 @@
-import type { AuthUser } from "@show-finder/shared";
+import type { AuthResponse } from "@show-finder/shared";
 import { apiFetch } from "./client";
 
 export function register(email: string, password: string) {
-  return apiFetch<{ user: AuthUser }>("/api/auth/register", {
+  return apiFetch<AuthResponse>("/api/auth/register", {
     method: "POST",
     body: JSON.stringify({ email, password }),
   });
 }
 
 export function login(email: string, password: string) {
-  return apiFetch<{ user: AuthUser }>("/api/auth/login", {
+  return apiFetch<AuthResponse>("/api/auth/login", {
     method: "POST",
     body: JSON.stringify({ email, password }),
   });
@@ -20,5 +20,5 @@ export function logout() {
 }
 
 export function fetchMe() {
-  return apiFetch<{ user: AuthUser }>("/api/auth/me");
+  return apiFetch<AuthResponse>("/api/auth/me");
 }

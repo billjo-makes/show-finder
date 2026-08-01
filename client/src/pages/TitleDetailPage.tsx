@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { MediaType } from "@show-finder/shared";
 import { fetchSimilarTitles, fetchTitleDetail } from "../api/titles";
 import { fetchRatings, rateTitle } from "../api/ratings";
+import { useAuth } from "../auth/AuthContext";
 import { RatingControl } from "../components/RatingControl";
 import { TitleCard } from "../components/TitleCard";
 
@@ -12,6 +13,7 @@ export function TitleDetailPage() {
   const { mediaType, id } = useParams<{ mediaType: MediaType; id: string }>();
   const tmdbId = Number(id);
   const queryClient = useQueryClient();
+  const { activeProfile } = useAuth();
 
   const detailQuery = useQuery({
     queryKey: ["title", mediaType, tmdbId],
@@ -25,7 +27,11 @@ export function TitleDetailPage() {
     enabled: Boolean(mediaType && tmdbId),
   });
 
-  const ratingsQuery = useQuery({ queryKey: ["ratings"], queryFn: fetchRatings });
+  const ratingsQuery = useQuery({
+    queryKey: ["ratings", activeProfile?.id],
+    queryFn: fetchRatings,
+    enabled: Boolean(activeProfile),
+  });
   const existingRating = ratingsQuery.data?.ratings.find(
     (r) => r.tmdbId === tmdbId && r.mediaType === mediaType,
   );
@@ -33,8 +39,8 @@ export function TitleDetailPage() {
   const rateMutation = useMutation({
     mutationFn: rateTitle,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["ratings"] });
-      queryClient.invalidateQueries({ queryKey: ["recommendations"] });
+      queryClient.invalidateQueries({ queryKey: ["ratings", activeProfile?.id] });
+      queryClient.invalidateQueries({ queryKey: ["recommendations", activeProfile?.id] });
     },
   });
 

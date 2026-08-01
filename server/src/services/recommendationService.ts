@@ -14,11 +14,11 @@ interface RecommendationResult {
 }
 
 export async function getRecommendations(
-  userId: string,
+  profileId: string,
   mediaType: MediaType,
 ): Promise<RecommendationResult> {
   const ratings = await prisma.rating.findMany({
-    where: { userId, mediaType },
+    where: { profileId, mediaType },
     orderBy: { updatedAt: "desc" },
   });
 

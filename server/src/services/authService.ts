@@ -13,12 +13,12 @@ export function verifyPassword(password: string, hash: string) {
   return bcrypt.compare(password, hash);
 }
 
-export function signToken(userId: string) {
-  return jwt.sign({ userId }, env.JWT_SECRET, { expiresIn: TOKEN_EXPIRY });
+export function signToken(userId: string, profileId?: string) {
+  return jwt.sign({ userId, profileId }, env.JWT_SECRET, { expiresIn: TOKEN_EXPIRY });
 }
 
-export function verifyToken(token: string): { userId: string } {
-  return jwt.verify(token, env.JWT_SECRET) as { userId: string };
+export function verifyToken(token: string): { userId: string; profileId?: string } {
+  return jwt.verify(token, env.JWT_SECRET) as { userId: string; profileId?: string };
 }
 
 export const AUTH_COOKIE_NAME = "sf_token";

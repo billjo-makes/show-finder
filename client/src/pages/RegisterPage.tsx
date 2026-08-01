@@ -16,8 +16,8 @@ export function RegisterPage() {
     setError(null);
     setIsSubmitting(true);
     try {
-      await register(email, password);
-      navigate("/");
+      const res = await register(email, password);
+      navigate(res.activeProfile ? "/" : "/profiles/select");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong");
     } finally {

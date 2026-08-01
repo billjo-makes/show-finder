@@ -2,13 +2,19 @@ import { Link } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { TitleSummary } from "@show-finder/shared";
 import { fetchRatings, rateTitle } from "../api/ratings";
+import { useAuth } from "../auth/AuthContext";
 import { RatingControl } from "./RatingControl";
 
 const POSTER_BASE = "https://image.tmdb.org/t/p/w342";
 
 export function TitleCard({ title }: { title: TitleSummary }) {
   const queryClient = useQueryClient();
-  const ratingsQuery = useQuery({ queryKey: ["ratings"], queryFn: fetchRatings });
+  const { activeProfile } = useAuth();
+  const ratingsQuery = useQuery({
+    queryKey: ["ratings", activeProfile?.id],
+    queryFn: fetchRatings,
+    enabled: Boolean(activeProfile),
+  });
   const existingValue =
     ratingsQuery.data?.ratings.find(
       (r) => r.tmdbId === title.tmdbId && r.mediaType === title.mediaType,
@@ -17,8 +23,8 @@ export function TitleCard({ title }: { title: TitleSummary }) {
   const rateMutation = useMutation({
     mutationFn: rateTitle,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["ratings"] });
-      queryClient.invalidateQueries({ queryKey: ["recommendations"] });
+      queryClient.invalidateQueries({ queryKey: ["ratings", activeProfile?.id] });
+      queryClient.invalidateQueries({ queryKey: ["recommendations", activeProfile?.id] });
     },
   });
 

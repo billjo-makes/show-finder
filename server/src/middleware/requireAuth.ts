@@ -5,6 +5,7 @@ declare global {
   namespace Express {
     interface Request {
       userId?: string;
+      profileId?: string;
     }
   }
 }
@@ -17,8 +18,9 @@ export function requireAuth(req: Request, res: Response, next: NextFunction) {
   }
 
   try {
-    const { userId } = verifyToken(token);
+    const { userId, profileId } = verifyToken(token);
     req.userId = userId;
+    req.profileId = profileId;
     next();
   } catch {
     res.status(401).json({ error: "Invalid or expired session" });

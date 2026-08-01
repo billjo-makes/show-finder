@@ -16,8 +16,8 @@ export function LoginPage() {
     setError(null);
     setIsSubmitting(true);
     try {
-      await login(email, password);
-      navigate("/");
+      const res = await login(email, password);
+      navigate(res.activeProfile ? "/" : "/profiles/select");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong");
     } finally {
