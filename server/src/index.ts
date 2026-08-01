@@ -1,4 +1,5 @@
 import dns from "dns";
+import os from "os";
 import { env } from "./env";
 import { createApp } from "./app";
 
@@ -10,4 +11,9 @@ const app = createApp();
 
 app.listen(env.PORT, () => {
   console.log(`Server listening on http://localhost:${env.PORT}`);
+  for (const iface of Object.values(os.networkInterfaces()).flat()) {
+    if (iface && iface.family === "IPv4" && !iface.internal) {
+      console.log(`  also reachable on the LAN at http://${iface.address}:${env.PORT}`);
+    }
+  }
 });

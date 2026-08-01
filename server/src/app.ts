@@ -11,7 +11,26 @@ import { recommendationsRouter } from "./routes/recommendations";
 export function createApp() {
   const app = express();
 
-  app.use(cors({ origin: env.CLIENT_URL, credentials: true }));
+  app.use(
+    cors({
+      // Accept requests from the client regardless of which host it was loaded
+      // from (localhost or any LAN IP) — only the client's dev-server port matters.
+      origin: (origin, callback) => {
+        if (!origin) {
+          callback(null, true);
+          return;
+        }
+        try {
+          const clientPort = new URL(env.CLIENT_URL).port;
+          const requestPort = new URL(origin).port;
+          callback(null, requestPort === clientPort);
+        } catch {
+          callback(null, false);
+        }
+      },
+      credentials: true,
+    }),
+  );
   app.use(express.json());
   app.use(cookieParser());
 
