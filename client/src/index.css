@@ -206,7 +206,12 @@ input {
   display: block;
 }
 
+.title-card-poster-wrap {
+  position: relative;
+}
+
 .title-card-poster {
+  display: block;
   aspect-ratio: 2 / 3;
   border-radius: 8px;
   overflow: hidden;
@@ -232,9 +237,58 @@ input {
   padding: 8px;
 }
 
+.title-card-rated-badge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background: rgba(0, 0, 0, 0.65);
+  color: var(--star);
+  font-size: 11px;
+  letter-spacing: 1px;
+  border-radius: 4px;
+  padding: 2px 5px;
+  pointer-events: none;
+}
+
+.title-card-rating-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.55);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+}
+
+.title-card-poster-wrap:hover .title-card-rating-overlay,
+.title-card-poster-wrap:focus-within .title-card-rating-overlay {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.title-card-rating-overlay .rating-control {
+  margin-top: 0;
+  gap: 2px;
+}
+
+.title-card-rating-overlay .rating-control .star {
+  font-size: 20px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.title-card-rating-overlay .rating-control .star-filled {
+  color: var(--star);
+}
+
 .title-card-name {
+  display: block;
   margin-top: 6px;
   font-size: 14px;
+  color: var(--text);
+  text-decoration: none;
 }
 
 /* Title detail */
