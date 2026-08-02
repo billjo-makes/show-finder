@@ -160,6 +160,7 @@ export function TitleDetailPage() {
               onAddToProfile={(profileId) => addToProfileMutation.mutate(profileId)}
             />
           </div>
+          <p className="title-detail-rated-on">1 star tells us to show you less like this.</p>
           {existingRating && (
             <p className="title-detail-rated-on">
               Rated on {new Date(existingRating.updatedAt).toLocaleDateString()}
