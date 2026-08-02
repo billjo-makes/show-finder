@@ -45,15 +45,9 @@ watchlistRouter.post(
     let profileId = req.profileId!;
 
     if (body.profileId && body.profileId !== profileId) {
-      const activeProfile = await prisma.profile.findUnique({ where: { id: profileId } });
-      if (activeProfile?.isUnder18 && !activeProfile.isPrimary) {
-        res.status(403).json({ error: "Under-18 profiles can't add to another profile's watch list" });
-        return;
-      }
-
-      const targetProfile = await prisma.profile.findUnique({ where: { id: body.profileId } });
-      if (!targetProfile || targetProfile.userId !== req.userId) {
-        res.status(404).json({ error: "Profile not found" });
+      const allowed = await canManageProfile(req.userId!, profileId, body.profileId);
+      if (!allowed) {
+        res.status(403).json({ error: "Not allowed to add to this profile's watch list" });
         return;
       }
       profileId = body.profileId;

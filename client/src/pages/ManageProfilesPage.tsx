@@ -103,11 +103,12 @@ export function ManageProfilesPage() {
                   <input
                     type="checkbox"
                     checked={profile.isUnder18}
+                    disabled={profile.isUnder18 && profile.id === activeProfile?.id}
                     onChange={(e) => handleToggleUnder18(profile.id, e.target.checked)}
                   />
                   Under 18
                 </label>
-                {!profile.isPrimary && (
+                {!profile.isPrimary && activeProfile?.isPrimary && (
                   <button onClick={() => handleSetPrimary(profile.id)}>Set as primary</button>
                 )}
                 <button

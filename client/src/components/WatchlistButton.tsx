@@ -23,7 +23,7 @@ export function WatchlistButton({
 
   const activeProfile = profiles?.find((p) => p.id === activeProfileId);
   const showCaret = Boolean(
-    profiles && profiles.length > 1 && activeProfileId && onAddToProfile && !activeProfile?.isUnder18,
+    profiles && profiles.length > 1 && activeProfileId && onAddToProfile && activeProfile?.isPrimary,
   );
 
   useEffect(() => {

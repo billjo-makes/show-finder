@@ -53,6 +53,17 @@ profilesRouter.post(
   "/",
   asyncHandler(async (req, res) => {
     const body = profileSchema.parse(req.body);
+
+    if (body.isPrimary) {
+      const activeProfile = req.profileId
+        ? await prisma.profile.findUnique({ where: { id: req.profileId } })
+        : null;
+      if (!activeProfile?.isPrimary) {
+        res.status(403).json({ error: "Only the primary profile can set another profile as primary" });
+        return;
+      }
+    }
+
     const profile = await prisma.$transaction(async (tx) => {
       if (body.isPrimary) {
         await tx.profile.updateMany({
@@ -85,6 +96,25 @@ profilesRouter.patch(
     if (!existing || existing.userId !== req.userId) {
       res.status(404).json({ error: "Profile not found" });
       return;
+    }
+
+    if (
+      existing.isUnder18 &&
+      body.isUnder18 === false &&
+      req.profileId === id
+    ) {
+      res.status(403).json({ error: "Under-18 profiles can't remove their own restriction" });
+      return;
+    }
+
+    if (body.isPrimary) {
+      const activeProfile = req.profileId
+        ? await prisma.profile.findUnique({ where: { id: req.profileId } })
+        : null;
+      if (!activeProfile?.isPrimary) {
+        res.status(403).json({ error: "Only the primary profile can set another profile as primary" });
+        return;
+      }
     }
 
     const profile = await prisma.$transaction(async (tx) => {
