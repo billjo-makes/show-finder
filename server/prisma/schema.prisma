@@ -23,6 +23,7 @@ model Profile {
   name                    String
   avatarColor             String?
   defaultWatchProviderIds String   @default("[]")
+  isUnder18               Boolean  @default(false)
   createdAt               DateTime @default(now())
   ratings                 Rating[]
   watchlist               WatchlistEntry[]

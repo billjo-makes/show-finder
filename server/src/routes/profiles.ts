@@ -14,6 +14,7 @@ function toDTO(profile: {
   name: string;
   avatarColor: string | null;
   defaultWatchProviderIds: string;
+  isUnder18: boolean;
   createdAt: Date;
 }): ProfileDTO {
   return {
@@ -21,6 +22,7 @@ function toDTO(profile: {
     name: profile.name,
     avatarColor: profile.avatarColor,
     defaultWatchProviderIds: JSON.parse(profile.defaultWatchProviderIds) as number[],
+    isUnder18: profile.isUnder18,
     createdAt: profile.createdAt.toISOString(),
   };
 }
@@ -29,6 +31,7 @@ const profileSchema = z.object({
   name: z.string().min(1).max(50),
   avatarColor: z.string().nullable().optional(),
   defaultWatchProviderIds: z.array(z.number()).optional(),
+  isUnder18: z.boolean().optional(),
 });
 
 profilesRouter.get(
@@ -52,6 +55,7 @@ profilesRouter.post(
         name: body.name,
         avatarColor: body.avatarColor ?? null,
         defaultWatchProviderIds: JSON.stringify(body.defaultWatchProviderIds ?? []),
+        isUnder18: body.isUnder18 ?? false,
       },
     });
     res.status(201).json({ profile: toDTO(profile) });
@@ -76,6 +80,7 @@ profilesRouter.patch(
         name: body.name,
         avatarColor: body.avatarColor,
         defaultWatchProviderIds: JSON.stringify(body.defaultWatchProviderIds),
+        isUnder18: body.isUnder18,
       },
     });
     res.json({ profile: toDTO(profile) });

@@ -7,6 +7,7 @@ export interface AddToWatchlistInput {
   title: string;
   posterPath: string | null;
   genreIds: number[];
+  profileId?: string;
 }
 
 export function addToWatchlist(input: AddToWatchlistInput) {

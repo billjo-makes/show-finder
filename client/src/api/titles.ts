@@ -22,15 +22,17 @@ export function discoverTitles(
     watchProviderIds?: number[];
     originalLanguage?: string;
     minRating?: number;
+    sortBy?: string;
   } = {},
 ) {
-  const { page = 1, keywordIds = [], watchProviderIds = [], originalLanguage, minRating } = options;
+  const { page = 1, keywordIds = [], watchProviderIds = [], originalLanguage, minRating, sortBy } = options;
   const params = new URLSearchParams({ mediaType, page: String(page) });
   if (genreIds.length > 0) params.set("genreIds", genreIds.join(","));
   if (keywordIds.length > 0) params.set("keywordIds", keywordIds.join(","));
   if (watchProviderIds.length > 0) params.set("watchProviderIds", watchProviderIds.join(","));
   if (originalLanguage) params.set("originalLanguage", originalLanguage);
   if (minRating !== undefined) params.set("minRating", String(minRating));
+  if (sortBy) params.set("sortBy", sortBy);
   return apiFetch<SearchResponse>(`/api/tmdb/discover?${params.toString()}`);
 }
 

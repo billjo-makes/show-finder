@@ -24,6 +24,7 @@ function toProfileDTO(profile: {
   name: string;
   avatarColor: string | null;
   defaultWatchProviderIds: string;
+  isUnder18: boolean;
   createdAt: Date;
 }): ProfileDTO {
   return {
@@ -31,6 +32,7 @@ function toProfileDTO(profile: {
     name: profile.name,
     avatarColor: profile.avatarColor,
     defaultWatchProviderIds: JSON.parse(profile.defaultWatchProviderIds) as number[],
+    isUnder18: profile.isUnder18,
     createdAt: profile.createdAt.toISOString(),
   };
 }

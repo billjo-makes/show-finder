@@ -16,6 +16,28 @@ const LGBTQ_KEYWORD_ID = 158718;
 
 const MIN_RATING_OPTIONS = [6, 7, 8, 9];
 
+// Mirrors the TV exclusion the server applies for under-18 profiles (movies
+// use a certification cap instead, so every movie genre stays selectable).
+// Hiding these chips avoids a confusing empty result when a restricted
+// profile picks a genre the server is going to exclude anyway.
+const RESTRICTED_TV_GENRE_IDS = new Set([80, 10768]); // Crime, War & Politics
+
+const SORT_OPTIONS: { value: string; label: string }[] = [
+  { value: "popularity.desc", label: "Most popular" },
+  { value: "vote_average.desc", label: "Highest rated" },
+  { value: "vote_count.desc", label: "Most voted" },
+];
+
+// TMDB's discover endpoint names the release-date sort field differently
+// per media type (movies vs. TV), so build those two options dynamically.
+function releaseDateSortOptions(mediaType: MediaType): { value: string; label: string }[] {
+  const field = mediaType === "movie" ? "primary_release_date" : "first_air_date";
+  return [
+    { value: `${field}.desc`, label: "Newest" },
+    { value: `${field}.asc`, label: "Oldest" },
+  ];
+}
+
 export function BrowsePage() {
   const { activeProfile } = useAuth();
   const [mediaType, setMediaType] = useState<MediaType>("movie");
@@ -25,12 +47,35 @@ export function BrowsePage() {
   );
   const [originalLanguage, setOriginalLanguage] = useState("");
   const [minRating, setMinRating] = useState("");
+  const [sortBy, setSortBy] = useState("popularity.desc");
   const [query, setQuery] = useState("");
 
   // Reset to the profile's default services whenever the active profile changes.
   useEffect(() => {
     setSelectedProviderIds(activeProfile?.defaultWatchProviderIds ?? []);
   }, [activeProfile?.id]);
+
+  // The release-date sort field is named differently per media type
+  // (primary_release_date vs. first_air_date), so remap it on toggle
+  // instead of leaving a stale, invalid field name selected.
+  useEffect(() => {
+    setSortBy((prev) => {
+      const [field, direction] = prev.split(".");
+      if (field !== "primary_release_date" && field !== "first_air_date") return prev;
+      const newField = mediaType === "movie" ? "primary_release_date" : "first_air_date";
+      return `${newField}.${direction}`;
+    });
+  }, [mediaType]);
+
+  const tvGenresRestricted = Boolean(activeProfile?.isUnder18) && mediaType === "tv";
+
+  // Drop a genre from the selection if it becomes hidden (profile switched to
+  // an under-18 one, or media type flipped to TV), so a stale chip can't keep
+  // forcing an empty result set.
+  useEffect(() => {
+    if (!tvGenresRestricted) return;
+    setSelectedGenreIds((prev) => prev.filter((id) => !RESTRICTED_TV_GENRE_IDS.has(id)));
+  }, [tvGenresRestricted]);
 
   const genresQuery = useQuery({
     queryKey: ["genres", mediaType],
@@ -53,7 +98,7 @@ export function BrowsePage() {
   const resultsQuery = useQuery({
     queryKey: query
       ? ["search", query]
-      : ["discover", mediaType, selectedGenreIds, selectedProviderIds, originalLanguage, minRating],
+      : ["discover", mediaType, selectedGenreIds, selectedProviderIds, originalLanguage, minRating, sortBy],
     queryFn: () =>
       query
         ? searchTitles(query)
@@ -62,6 +107,7 @@ export function BrowsePage() {
             watchProviderIds: selectedProviderIds,
             originalLanguage: originalLanguage || undefined,
             minRating: minRating ? Number(minRating) : undefined,
+            sortBy,
           }),
   });
 
@@ -84,6 +130,7 @@ export function BrowsePage() {
   return (
     <div className="page">
       <h1>Browse</h1>
+      {activeProfile?.isUnder18 && <p className="filter-label">Teen-safe filtering is on for this profile.</p>}
       <SearchBar onSearch={handleSearch} />
 
       {!query && (
@@ -101,7 +148,10 @@ export function BrowsePage() {
           </div>
           {genresQuery.data && (
             <GenreFilter
-              genres={[...genresQuery.data.genres, { id: LGBTQ_CHIP_ID, name: "LGBTQ+" }]}
+              genres={[
+                ...genresQuery.data.genres.filter((g) => !(tvGenresRestricted && RESTRICTED_TV_GENRE_IDS.has(g.id))),
+                { id: LGBTQ_CHIP_ID, name: "LGBTQ+" },
+              ]}
               selectedIds={selectedGenreIds}
               onToggle={toggleGenre}
             />
@@ -135,7 +185,7 @@ export function BrowsePage() {
               </div>
             )}
             <div className="filter-group">
-              <p className="filter-label">Minimum rating</p>
+              <p className="filter-label">Minimum TMDB rating</p>
               <select
                 className="select-filter"
                 value={minRating}
@@ -145,6 +195,20 @@ export function BrowsePage() {
                 {MIN_RATING_OPTIONS.map((rating) => (
                   <option key={rating} value={rating}>
                     {rating}+
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="filter-group">
+              <p className="filter-label">Sort by</p>
+              <select
+                className="select-filter"
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+              >
+                {[...SORT_OPTIONS, ...releaseDateSortOptions(mediaType)].map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
                   </option>
                 ))}
               </select>

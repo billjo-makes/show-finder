@@ -6,6 +6,7 @@ import { ApiError } from "../api/client";
 export function ManageProfilesPage() {
   const { profiles, activeProfile, refreshProfiles } = useAuth();
   const [newName, setNewName] = useState("");
+  const [newIsUnder18, setNewIsUnder18] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -16,13 +17,24 @@ export function ManageProfilesPage() {
     setError(null);
     setIsSubmitting(true);
     try {
-      await createProfile({ name: newName });
+      await createProfile({ name: newName, isUnder18: newIsUnder18 });
       setNewName("");
+      setNewIsUnder18(false);
       await refreshProfiles();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong");
     } finally {
       setIsSubmitting(false);
+    }
+  }
+
+  async function handleToggleUnder18(id: string, isUnder18: boolean) {
+    setError(null);
+    try {
+      await updateProfile(id, { isUnder18 });
+      await refreshProfiles();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Something went wrong");
     }
   }
 
@@ -76,6 +88,14 @@ export function ManageProfilesPage() {
                   {profile.name}
                   {profile.id === activeProfile?.id && " (active)"}
                 </span>
+                <label className="profile-under18-toggle">
+                  <input
+                    type="checkbox"
+                    checked={profile.isUnder18}
+                    onChange={(e) => handleToggleUnder18(profile.id, e.target.checked)}
+                  />
+                  Under 18
+                </label>
                 <button
                   onClick={() => {
                     setEditingId(profile.id);
@@ -99,6 +119,14 @@ export function ManageProfilesPage() {
           onChange={(e) => setNewName(e.target.value)}
           required
         />
+        <label className="profile-under18-toggle">
+          <input
+            type="checkbox"
+            checked={newIsUnder18}
+            onChange={(e) => setNewIsUnder18(e.target.checked)}
+          />
+          Under 18
+        </label>
         <button type="submit" disabled={isSubmitting}>
           {isSubmitting ? "Adding…" : "Add Profile"}
         </button>

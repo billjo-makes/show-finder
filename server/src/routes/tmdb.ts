@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { z } from "zod";
-import type { MediaType } from "@show-finder/shared";
+import type { MediaType, TitleSummary } from "@show-finder/shared";
 import { prisma } from "../prisma";
 import { requireAuth } from "../middleware/requireAuth";
 import { asyncHandler } from "../utils/asyncHandler";
@@ -21,6 +21,26 @@ const mediaTypeSchema = z.enum(["movie", "tv"]);
 // rating filter is applied, so the score floor is actually meaningful.
 const MIN_VOTE_COUNT_FOR_RATING_FILTER = 50;
 
+// TMDB's TV discover endpoint has no certification parameter (movies do), so
+// under-18 profiles get a genre-based exclusion for TV and an actual
+// certification cap for movies.
+const RESTRICTED_MOVIE_GENRE_IDS = new Set([80, 10752]); // Crime, War
+const RESTRICTED_TV_GENRE_IDS = new Set([80, 10768]); // Crime, War & Politics
+const TEEN_SAFE_MOVIE_CERTIFICATION = "PG-13";
+
+async function isRestrictedProfile(profileId: string | undefined): Promise<boolean> {
+  if (!profileId) return false;
+  const profile = await prisma.profile.findUnique({ where: { id: profileId } });
+  return profile?.isUnder18 ?? false;
+}
+
+// Best-effort filter for endpoints (search) where TMDB exposes no
+// certification data at all, only the genres attached to each result.
+function isTeenSafe(result: TitleSummary): boolean {
+  const restrictedIds = result.mediaType === "movie" ? RESTRICTED_MOVIE_GENRE_IDS : RESTRICTED_TV_GENRE_IDS;
+  return !result.genreIds.some((id) => restrictedIds.has(id));
+}
+
 tmdbRouter.get(
   "/search",
   asyncHandler(async (req, res) => {
@@ -32,22 +52,26 @@ tmdbRouter.get(
       })
       .parse(req.query);
 
+    const restricted = await isRestrictedProfile(req.profileId);
+
     if (mediaType === "multi") {
       const { data } = await tmdbClient.get("/search/multi", { params: { query, page } });
-      const results = data.results
+      let results: TitleSummary[] = data.results
         .map((raw: Parameters<typeof resolveMediaTypeFromMulti>[0]) => {
           const type = resolveMediaTypeFromMulti(raw);
           return type ? normalizeSummary(raw, type) : null;
         })
-        .filter(Boolean);
+        .filter((result: TitleSummary | null): result is TitleSummary => result !== null);
+      if (restricted) results = results.filter(isTeenSafe);
       res.json({ results, page: data.page, totalPages: data.total_pages });
       return;
     }
 
     const { data } = await tmdbClient.get(`/search/${mediaType}`, { params: { query, page } });
-    const results = data.results.map((raw: Parameters<typeof normalizeSummary>[0]) =>
+    let results = data.results.map((raw: Parameters<typeof normalizeSummary>[0]) =>
       normalizeSummary(raw, mediaType as MediaType),
     );
+    if (restricted) results = results.filter(isTeenSafe);
     res.json({ results, page: data.page, totalPages: data.total_pages });
   }),
 );
@@ -80,6 +104,12 @@ tmdbRouter.get(
     // together (any selected service), unlike genres which are AND'd.
     const watchProvidersParam = watchProviderIds?.split(",").join("|");
 
+    // Same low-sample-size problem applies when sorting by rating, not just
+    // filtering by it: without a floor, a 1-vote 10.0 title would sort first.
+    const needsVoteFloor = minRating !== undefined || sortBy.startsWith("vote_average.");
+
+    const restricted = await isRestrictedProfile(req.profileId);
+
     const { data } = await tmdbClient.get(`/discover/${mediaType}`, {
       params: {
         with_genres: genreIds,
@@ -88,11 +118,14 @@ tmdbRouter.get(
         watch_region: watchRegion,
         with_original_language: originalLanguage,
         "vote_average.gte": minRating,
-        // Without a vote-count floor, a title with 2 votes at 9.0 would
-        // outrank a well-reviewed title with thousands of votes at 7.5.
-        "vote_count.gte": minRating !== undefined ? MIN_VOTE_COUNT_FOR_RATING_FILTER : undefined,
+        "vote_count.gte": needsVoteFloor ? MIN_VOTE_COUNT_FOR_RATING_FILTER : undefined,
         sort_by: sortBy,
         page,
+        // Movies: cap by MPAA certification. TV has no certification param on
+        // this endpoint, so fall back to excluding the mature genres instead.
+        certification_country: restricted && mediaType === "movie" ? "US" : undefined,
+        "certification.lte": restricted && mediaType === "movie" ? TEEN_SAFE_MOVIE_CERTIFICATION : undefined,
+        without_genres: restricted && mediaType === "tv" ? [...RESTRICTED_TV_GENRE_IDS].join(",") : undefined,
       },
     });
     const results = data.results.map((raw: Parameters<typeof normalizeSummary>[0]) =>

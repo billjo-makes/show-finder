@@ -16,7 +16,7 @@ export function TitleDetailPage() {
   const { mediaType, id } = useParams<{ mediaType: MediaType; id: string }>();
   const tmdbId = Number(id);
   const queryClient = useQueryClient();
-  const { activeProfile } = useAuth();
+  const { activeProfile, profiles } = useAuth();
 
   const detailQuery = useQuery({
     queryKey: ["title", mediaType, tmdbId],
@@ -68,6 +68,21 @@ export function TitleDetailPage() {
     mutationFn: removeFromWatchlist,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["watchlist", activeProfile?.id] });
+    },
+  });
+
+  const addToProfileMutation = useMutation({
+    mutationFn: (profileId: string) =>
+      addToWatchlist({
+        tmdbId,
+        mediaType: mediaType!,
+        title: detailQuery.data!.title,
+        posterPath: detailQuery.data!.posterPath,
+        genreIds: detailQuery.data!.genres.map((g) => g.id),
+        profileId,
+      }),
+    onSuccess: (_data, profileId) => {
+      queryClient.invalidateQueries({ queryKey: ["watchlist", profileId] });
     },
   });
 
@@ -127,6 +142,9 @@ export function TitleDetailPage() {
               onWatchlist={Boolean(watchlistEntry)}
               onToggle={handleToggleWatchlist}
               disabled={addWatchlistMutation.isPending || removeWatchlistMutation.isPending}
+              profiles={profiles}
+              activeProfileId={activeProfile?.id}
+              onAddToProfile={(profileId) => addToProfileMutation.mutate(profileId)}
             />
           </div>
           {existingRating && (

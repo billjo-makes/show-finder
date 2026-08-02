@@ -34,13 +34,29 @@ const addSchema = z.object({
   title: z.string(),
   posterPath: z.string().nullable(),
   genreIds: z.array(z.number()),
+  profileId: z.string().optional(),
 });
 
 watchlistRouter.post(
   "/",
   asyncHandler(async (req, res) => {
     const body = addSchema.parse(req.body);
-    const profileId = req.profileId!;
+    let profileId = req.profileId!;
+
+    if (body.profileId && body.profileId !== profileId) {
+      const activeProfile = await prisma.profile.findUnique({ where: { id: profileId } });
+      if (activeProfile?.isUnder18) {
+        res.status(403).json({ error: "Under-18 profiles can't add to another profile's watch list" });
+        return;
+      }
+
+      const targetProfile = await prisma.profile.findUnique({ where: { id: body.profileId } });
+      if (!targetProfile || targetProfile.userId !== req.userId) {
+        res.status(404).json({ error: "Profile not found" });
+        return;
+      }
+      profileId = body.profileId;
+    }
 
     const entry = await prisma.watchlistEntry.upsert({
       where: {

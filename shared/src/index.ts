@@ -59,6 +59,7 @@ export interface ProfileDTO {
   name: string;
   avatarColor: string | null;
   defaultWatchProviderIds: number[];
+  isUnder18: boolean;
   createdAt: string;
 }
 

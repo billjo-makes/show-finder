@@ -11,7 +11,7 @@ const POSTER_BASE = "https://image.tmdb.org/t/p/w342";
 
 export function TitleCard({ title }: { title: TitleSummary }) {
   const queryClient = useQueryClient();
-  const { activeProfile } = useAuth();
+  const { activeProfile, profiles } = useAuth();
   const ratingsQuery = useQuery({
     queryKey: ["ratings", activeProfile?.id],
     queryFn: fetchRatings,
@@ -51,6 +51,21 @@ export function TitleCard({ title }: { title: TitleSummary }) {
     mutationFn: removeFromWatchlist,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["watchlist", activeProfile?.id] });
+    },
+  });
+
+  const addToProfileMutation = useMutation({
+    mutationFn: (profileId: string) =>
+      addToWatchlist({
+        tmdbId: title.tmdbId,
+        mediaType: title.mediaType,
+        title: title.title,
+        posterPath: title.posterPath,
+        genreIds: title.genreIds,
+        profileId,
+      }),
+    onSuccess: (_data, profileId) => {
+      queryClient.invalidateQueries({ queryKey: ["watchlist", profileId] });
     },
   });
 
@@ -98,6 +113,9 @@ export function TitleCard({ title }: { title: TitleSummary }) {
           onWatchlist={Boolean(watchlistEntry)}
           onToggle={handleToggleWatchlist}
           disabled={addWatchlistMutation.isPending || removeWatchlistMutation.isPending}
+          profiles={profiles}
+          activeProfileId={activeProfile?.id}
+          onAddToProfile={(profileId) => addToProfileMutation.mutate(profileId)}
         />
 
         <div className="title-card-rating-overlay">

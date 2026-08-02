@@ -341,11 +341,17 @@ input {
   color: var(--star);
 }
 
-.watchlist-button {
+.watchlist-button-group {
   position: absolute;
   top: 6px;
   left: 6px;
   z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.watchlist-button {
   width: 26px;
   height: 26px;
   display: flex;
@@ -369,6 +375,72 @@ input {
 .watchlist-button:disabled {
   opacity: 0.6;
   cursor: default;
+}
+
+.watchlist-button-caret {
+  width: 16px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 10px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+}
+
+.watchlist-button-caret:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.watchlist-profile-menu {
+  position: absolute;
+  top: 30px;
+  left: 0;
+  z-index: 3;
+  list-style: none;
+  margin: 0;
+  padding: 4px;
+  min-width: 160px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--card-bg);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.watchlist-profile-menu li + li {
+  margin-top: 2px;
+}
+
+.watchlist-profile-menu button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 8px;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-size: 13px;
+  text-align: left;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.watchlist-profile-menu button:hover {
+  background: var(--hover-bg, rgba(127, 127, 127, 0.15));
+}
+
+.watchlist-profile-menu-check {
+  display: inline-block;
+  width: 14px;
+  color: var(--accent);
+  flex-shrink: 0;
 }
 
 .title-card-name {
@@ -455,8 +527,13 @@ input {
   gap: 16px;
 }
 
+.title-detail-actions .watchlist-button-group {
+  position: relative;
+  top: auto;
+  left: auto;
+}
+
 .title-detail-actions .watchlist-button {
-  position: static;
   width: 36px;
   height: 36px;
   font-size: 18px;
@@ -469,6 +546,13 @@ input {
   background: var(--accent);
   border-color: var(--accent);
   color: #fff;
+}
+
+.title-detail-actions .watchlist-button-caret {
+  height: 36px;
+  border-color: var(--border);
+  background: var(--card-bg);
+  color: var(--text);
 }
 
 .title-detail-rated-on {
@@ -685,7 +769,17 @@ input {
 
 .profile-create-form {
   display: flex;
+  align-items: center;
   gap: 8px;
+}
+
+.profile-under18-toggle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--text-muted);
+  white-space: nowrap;
 }
 
 /* Small screens (phones) */
