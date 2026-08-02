@@ -6,6 +6,7 @@ export interface ProfileInput {
   avatarColor?: string | null;
   defaultWatchProviderIds?: number[];
   isUnder18?: boolean;
+  isPrimary?: boolean;
 }
 
 export function listProfiles() {
