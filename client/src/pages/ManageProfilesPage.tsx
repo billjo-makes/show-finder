@@ -38,6 +38,16 @@ export function ManageProfilesPage() {
     }
   }
 
+  async function handleSetPrimary(id: string) {
+    setError(null);
+    try {
+      await updateProfile(id, { isPrimary: true });
+      await refreshProfiles();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Something went wrong");
+    }
+  }
+
   async function handleRename(e: FormEvent, id: string) {
     e.preventDefault();
     setError(null);
@@ -87,6 +97,7 @@ export function ManageProfilesPage() {
                 <span>
                   {profile.name}
                   {profile.id === activeProfile?.id && " (active)"}
+                  {profile.isPrimary && " (primary)"}
                 </span>
                 <label className="profile-under18-toggle">
                   <input
@@ -96,6 +107,9 @@ export function ManageProfilesPage() {
                   />
                   Under 18
                 </label>
+                {!profile.isPrimary && (
+                  <button onClick={() => handleSetPrimary(profile.id)}>Set as primary</button>
+                )}
                 <button
                   onClick={() => {
                     setEditingId(profile.id);

@@ -25,6 +25,7 @@ function toProfileDTO(profile: {
   avatarColor: string | null;
   defaultWatchProviderIds: string;
   isUnder18: boolean;
+  isPrimary: boolean;
   createdAt: Date;
 }): ProfileDTO {
   return {
@@ -33,6 +34,7 @@ function toProfileDTO(profile: {
     avatarColor: profile.avatarColor,
     defaultWatchProviderIds: JSON.parse(profile.defaultWatchProviderIds) as number[],
     isUnder18: profile.isUnder18,
+    isPrimary: profile.isPrimary,
     createdAt: profile.createdAt.toISOString(),
   };
 }
@@ -51,7 +53,7 @@ authRouter.post(
     const passwordHash = await hashPassword(password);
     const user = await prisma.user.create({ data: { email, passwordHash } });
     const profile = await prisma.profile.create({
-      data: { userId: user.id, name: "Profile 1" },
+      data: { userId: user.id, name: "Profile 1", isPrimary: true },
     });
 
     const token = signToken(user.id, profile.id);
@@ -81,7 +83,7 @@ authRouter.post(
     });
     if (profiles.length === 0) {
       const profile = await prisma.profile.create({
-        data: { userId: user.id, name: "Profile 1" },
+        data: { userId: user.id, name: "Profile 1", isPrimary: true },
       });
       profiles = [profile];
     }

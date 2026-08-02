@@ -67,7 +67,7 @@ export function AccountPage() {
 
   const ratingsQuery = useQuery({
     queryKey: ["ratings", activeProfile?.id],
-    queryFn: fetchRatings,
+    queryFn: () => fetchRatings(),
     enabled: Boolean(activeProfile),
   });
 

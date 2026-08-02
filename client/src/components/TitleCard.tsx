@@ -9,13 +9,24 @@ import { WatchlistButton } from "./WatchlistButton";
 
 const POSTER_BASE = "https://image.tmdb.org/t/p/w342";
 
-export function TitleCard({ title }: { title: TitleSummary }) {
+interface TitleCardProps {
+  title: TitleSummary;
+  // Profile this card's rating/watch-list state and actions apply to.
+  // Defaults to the active profile; a primary profile viewing another
+  // profile's section on the Watch List page passes that profile's id.
+  ownerProfileId?: string;
+}
+
+export function TitleCard({ title, ownerProfileId }: TitleCardProps) {
   const queryClient = useQueryClient();
   const { activeProfile, profiles } = useAuth();
+  const ownerId = ownerProfileId ?? activeProfile?.id;
+  const isOwnProfile = !ownerProfileId || ownerProfileId === activeProfile?.id;
+
   const ratingsQuery = useQuery({
-    queryKey: ["ratings", activeProfile?.id],
-    queryFn: fetchRatings,
-    enabled: Boolean(activeProfile),
+    queryKey: ["ratings", ownerId],
+    queryFn: () => fetchRatings(ownerId),
+    enabled: Boolean(ownerId),
   });
   const existingValue =
     ratingsQuery.data?.ratings.find(
@@ -23,9 +34,9 @@ export function TitleCard({ title }: { title: TitleSummary }) {
     )?.value ?? 0;
 
   const watchlistQuery = useQuery({
-    queryKey: ["watchlist", activeProfile?.id],
-    queryFn: fetchWatchlist,
-    enabled: Boolean(activeProfile),
+    queryKey: ["watchlist", ownerId],
+    queryFn: () => fetchWatchlist(ownerId),
+    enabled: Boolean(ownerId),
   });
   const watchlistEntry = watchlistQuery.data?.entries.find(
     (e) => e.tmdbId === title.tmdbId && e.mediaType === title.mediaType,
@@ -34,23 +45,23 @@ export function TitleCard({ title }: { title: TitleSummary }) {
   const rateMutation = useMutation({
     mutationFn: rateTitle,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["ratings", activeProfile?.id] });
-      queryClient.invalidateQueries({ queryKey: ["recommendations", activeProfile?.id] });
-      queryClient.invalidateQueries({ queryKey: ["watchlist", activeProfile?.id] });
+      queryClient.invalidateQueries({ queryKey: ["ratings", ownerId] });
+      queryClient.invalidateQueries({ queryKey: ["recommendations", ownerId] });
+      queryClient.invalidateQueries({ queryKey: ["watchlist", ownerId] });
     },
   });
 
   const addWatchlistMutation = useMutation({
     mutationFn: addToWatchlist,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["watchlist", activeProfile?.id] });
+      queryClient.invalidateQueries({ queryKey: ["watchlist", ownerId] });
     },
   });
 
   const removeWatchlistMutation = useMutation({
     mutationFn: removeFromWatchlist,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["watchlist", activeProfile?.id] });
+      queryClient.invalidateQueries({ queryKey: ["watchlist", ownerId] });
     },
   });
 
@@ -77,6 +88,7 @@ export function TitleCard({ title }: { title: TitleSummary }) {
       title: title.title,
       posterPath: title.posterPath,
       genreIds: title.genreIds,
+      profileId: ownerId,
     });
   }
 
@@ -90,6 +102,7 @@ export function TitleCard({ title }: { title: TitleSummary }) {
         title: title.title,
         posterPath: title.posterPath,
         genreIds: title.genreIds,
+        profileId: ownerId,
       });
     }
   }
@@ -113,9 +126,9 @@ export function TitleCard({ title }: { title: TitleSummary }) {
           onWatchlist={Boolean(watchlistEntry)}
           onToggle={handleToggleWatchlist}
           disabled={addWatchlistMutation.isPending || removeWatchlistMutation.isPending}
-          profiles={profiles}
-          activeProfileId={activeProfile?.id}
-          onAddToProfile={(profileId) => addToProfileMutation.mutate(profileId)}
+          profiles={isOwnProfile ? profiles : undefined}
+          activeProfileId={isOwnProfile ? activeProfile?.id : undefined}
+          onAddToProfile={isOwnProfile ? (profileId) => addToProfileMutation.mutate(profileId) : undefined}
         />
 
         <div className="title-card-rating-overlay">

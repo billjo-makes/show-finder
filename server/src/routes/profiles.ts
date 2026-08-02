@@ -15,6 +15,7 @@ function toDTO(profile: {
   avatarColor: string | null;
   defaultWatchProviderIds: string;
   isUnder18: boolean;
+  isPrimary: boolean;
   createdAt: Date;
 }): ProfileDTO {
   return {
@@ -23,6 +24,7 @@ function toDTO(profile: {
     avatarColor: profile.avatarColor,
     defaultWatchProviderIds: JSON.parse(profile.defaultWatchProviderIds) as number[],
     isUnder18: profile.isUnder18,
+    isPrimary: profile.isPrimary,
     createdAt: profile.createdAt.toISOString(),
   };
 }
@@ -32,7 +34,9 @@ const profileSchema = z.object({
   avatarColor: z.string().nullable().optional(),
   defaultWatchProviderIds: z.array(z.number()).optional(),
   isUnder18: z.boolean().optional(),
+  isPrimary: z.boolean().optional(),
 });
+
 
 profilesRouter.get(
   "/",
@@ -49,14 +53,23 @@ profilesRouter.post(
   "/",
   asyncHandler(async (req, res) => {
     const body = profileSchema.parse(req.body);
-    const profile = await prisma.profile.create({
-      data: {
-        userId: req.userId!,
-        name: body.name,
-        avatarColor: body.avatarColor ?? null,
-        defaultWatchProviderIds: JSON.stringify(body.defaultWatchProviderIds ?? []),
-        isUnder18: body.isUnder18 ?? false,
-      },
+    const profile = await prisma.$transaction(async (tx) => {
+      if (body.isPrimary) {
+        await tx.profile.updateMany({
+          where: { userId: req.userId!, isPrimary: true },
+          data: { isPrimary: false },
+        });
+      }
+      return tx.profile.create({
+        data: {
+          userId: req.userId!,
+          name: body.name,
+          avatarColor: body.avatarColor ?? null,
+          defaultWatchProviderIds: JSON.stringify(body.defaultWatchProviderIds ?? []),
+          isUnder18: body.isUnder18 ?? false,
+          isPrimary: body.isPrimary ?? false,
+        },
+      });
     });
     res.status(201).json({ profile: toDTO(profile) });
   }),
@@ -74,14 +87,23 @@ profilesRouter.patch(
       return;
     }
 
-    const profile = await prisma.profile.update({
-      where: { id },
-      data: {
-        name: body.name,
-        avatarColor: body.avatarColor,
-        defaultWatchProviderIds: JSON.stringify(body.defaultWatchProviderIds),
-        isUnder18: body.isUnder18,
-      },
+    const profile = await prisma.$transaction(async (tx) => {
+      if (body.isPrimary) {
+        await tx.profile.updateMany({
+          where: { userId: req.userId!, isPrimary: true, id: { not: id } },
+          data: { isPrimary: false },
+        });
+      }
+      return tx.profile.update({
+        where: { id },
+        data: {
+          name: body.name,
+          avatarColor: body.avatarColor,
+          defaultWatchProviderIds: JSON.stringify(body.defaultWatchProviderIds),
+          isUnder18: body.isUnder18,
+          isPrimary: body.isPrimary,
+        },
+      });
     });
     res.json({ profile: toDTO(profile) });
   }),

@@ -587,6 +587,17 @@ input {
   margin: 8px 0 4px;
 }
 
+/* Watch List (primary profile, grouped by profile) */
+.watchlist-profile-section {
+  margin-top: 32px;
+}
+
+.watchlist-profile-section h2 {
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 8px;
+  margin-bottom: 12px;
+}
+
 /* Profile / ratings list */
 .ratings-list {
   list-style: none;

@@ -32,7 +32,7 @@ export function TitleDetailPage() {
 
   const ratingsQuery = useQuery({
     queryKey: ["ratings", activeProfile?.id],
-    queryFn: fetchRatings,
+    queryFn: () => fetchRatings(),
     enabled: Boolean(activeProfile),
   });
   const existingRating = ratingsQuery.data?.ratings.find(
@@ -41,7 +41,7 @@ export function TitleDetailPage() {
 
   const watchlistQuery = useQuery({
     queryKey: ["watchlist", activeProfile?.id],
-    queryFn: fetchWatchlist,
+    queryFn: () => fetchWatchlist(),
     enabled: Boolean(activeProfile),
   });
   const watchlistEntry = watchlistQuery.data?.entries.find(

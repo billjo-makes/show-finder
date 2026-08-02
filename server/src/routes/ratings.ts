@@ -4,6 +4,7 @@ import { prisma } from "../prisma";
 import { requireAuth } from "../middleware/requireAuth";
 import { requireProfile } from "../middleware/requireProfile";
 import { asyncHandler } from "../utils/asyncHandler";
+import { canManageProfile } from "../services/profileAccess";
 
 export const ratingsRouter = Router();
 ratingsRouter.use(requireAuth, requireProfile);
@@ -39,13 +40,23 @@ const upsertSchema = z.object({
   title: z.string(),
   posterPath: z.string().nullable(),
   genreIds: z.array(z.number()),
+  profileId: z.string().optional(),
 });
 
 ratingsRouter.post(
   "/",
   asyncHandler(async (req, res) => {
     const body = upsertSchema.parse(req.body);
-    const profileId = req.profileId!;
+    let profileId = req.profileId!;
+
+    if (body.profileId && body.profileId !== profileId) {
+      const allowed = await canManageProfile(req.userId!, profileId, body.profileId);
+      if (!allowed) {
+        res.status(403).json({ error: "Not allowed to rate on behalf of this profile" });
+        return;
+      }
+      profileId = body.profileId;
+    }
 
     const [rating] = await prisma.$transaction([
       prisma.rating.upsert({
@@ -85,8 +96,22 @@ ratingsRouter.post(
 ratingsRouter.get(
   "/",
   asyncHandler(async (req, res) => {
+    const { profileId: queryProfileId } = z
+      .object({ profileId: z.string().optional() })
+      .parse(req.query);
+
+    let profileId = req.profileId!;
+    if (queryProfileId && queryProfileId !== profileId) {
+      const allowed = await canManageProfile(req.userId!, profileId, queryProfileId);
+      if (!allowed) {
+        res.status(403).json({ error: "Not allowed to view this profile's ratings" });
+        return;
+      }
+      profileId = queryProfileId;
+    }
+
     const ratings = await prisma.rating.findMany({
-      where: { profileId: req.profileId! },
+      where: { profileId },
       orderBy: { updatedAt: "desc" },
     });
     res.json({ ratings: ratings.map(toDTO) });
@@ -99,7 +124,13 @@ ratingsRouter.delete(
     const { id } = z.object({ id: z.string() }).parse(req.params);
 
     const rating = await prisma.rating.findUnique({ where: { id } });
-    if (!rating || rating.profileId !== req.profileId) {
+    if (!rating) {
+      res.status(404).json({ error: "Rating not found" });
+      return;
+    }
+
+    const allowed = await canManageProfile(req.userId!, req.profileId!, rating.profileId);
+    if (!allowed) {
       res.status(404).json({ error: "Rating not found" });
       return;
     }

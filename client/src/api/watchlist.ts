@@ -17,8 +17,9 @@ export function addToWatchlist(input: AddToWatchlistInput) {
   });
 }
 
-export function fetchWatchlist() {
-  return apiFetch<{ entries: WatchlistEntryDTO[] }>("/api/watchlist");
+export function fetchWatchlist(profileId?: string) {
+  const query = profileId ? `?profileId=${encodeURIComponent(profileId)}` : "";
+  return apiFetch<{ entries: WatchlistEntryDTO[] }>(`/api/watchlist${query}`);
 }
 
 export function removeFromWatchlist(id: string) {

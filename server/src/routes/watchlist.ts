@@ -4,6 +4,7 @@ import { prisma } from "../prisma";
 import { requireAuth } from "../middleware/requireAuth";
 import { requireProfile } from "../middleware/requireProfile";
 import { asyncHandler } from "../utils/asyncHandler";
+import { canManageProfile } from "../services/profileAccess";
 
 export const watchlistRouter = Router();
 watchlistRouter.use(requireAuth, requireProfile);
@@ -45,7 +46,7 @@ watchlistRouter.post(
 
     if (body.profileId && body.profileId !== profileId) {
       const activeProfile = await prisma.profile.findUnique({ where: { id: profileId } });
-      if (activeProfile?.isUnder18) {
+      if (activeProfile?.isUnder18 && !activeProfile.isPrimary) {
         res.status(403).json({ error: "Under-18 profiles can't add to another profile's watch list" });
         return;
       }
@@ -84,8 +85,22 @@ watchlistRouter.post(
 watchlistRouter.get(
   "/",
   asyncHandler(async (req, res) => {
+    const { profileId: queryProfileId } = z
+      .object({ profileId: z.string().optional() })
+      .parse(req.query);
+
+    let profileId = req.profileId!;
+    if (queryProfileId && queryProfileId !== profileId) {
+      const allowed = await canManageProfile(req.userId!, profileId, queryProfileId);
+      if (!allowed) {
+        res.status(403).json({ error: "Not allowed to view this profile's watch list" });
+        return;
+      }
+      profileId = queryProfileId;
+    }
+
     const entries = await prisma.watchlistEntry.findMany({
-      where: { profileId: req.profileId! },
+      where: { profileId },
       orderBy: { createdAt: "desc" },
     });
     res.json({ entries: entries.map(toDTO) });
@@ -98,7 +113,13 @@ watchlistRouter.delete(
     const { id } = z.object({ id: z.string() }).parse(req.params);
 
     const entry = await prisma.watchlistEntry.findUnique({ where: { id } });
-    if (!entry || entry.profileId !== req.profileId) {
+    if (!entry) {
+      res.status(404).json({ error: "Watchlist entry not found" });
+      return;
+    }
+
+    const allowed = await canManageProfile(req.userId!, req.profileId!, entry.profileId);
+    if (!allowed) {
       res.status(404).json({ error: "Watchlist entry not found" });
       return;
     }

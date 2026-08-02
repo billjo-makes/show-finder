@@ -8,6 +8,7 @@ export interface RateTitleInput {
   title: string;
   posterPath: string | null;
   genreIds: number[];
+  profileId?: string;
 }
 
 export function rateTitle(input: RateTitleInput) {
@@ -17,8 +18,9 @@ export function rateTitle(input: RateTitleInput) {
   });
 }
 
-export function fetchRatings() {
-  return apiFetch<{ ratings: RatingDTO[] }>("/api/ratings");
+export function fetchRatings(profileId?: string) {
+  const query = profileId ? `?profileId=${encodeURIComponent(profileId)}` : "";
+  return apiFetch<{ ratings: RatingDTO[] }>(`/api/ratings${query}`);
 }
 
 export function deleteRating(id: string) {
