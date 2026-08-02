@@ -12,6 +12,18 @@ import { WatchlistButton } from "../components/WatchlistButton";
 const POSTER_BASE = "https://image.tmdb.org/t/p/w500";
 const PROVIDER_LOGO_BASE = "https://image.tmdb.org/t/p/w45";
 
+const languageDisplayNames =
+  typeof Intl.DisplayNames === "function" ? new Intl.DisplayNames(["en"], { type: "language" }) : null;
+
+function languageName(code: string | null) {
+  if (!code) return null;
+  try {
+    return languageDisplayNames?.of(code) ?? code;
+  } catch {
+    return code;
+  }
+}
+
 export function TitleDetailPage() {
   const { mediaType, id } = useParams<{ mediaType: MediaType; id: string }>();
   const tmdbId = Number(id);
@@ -125,6 +137,7 @@ export function TitleDetailPage() {
           <p className="title-detail-meta">
             {title.releaseDate?.slice(0, 4)} · {title.genres.map((g) => g.name).join(", ")}
             {title.runtime ? ` · ${title.runtime} min` : ""}
+            {languageName(title.originalLanguage) ? ` · ${languageName(title.originalLanguage)}` : ""}
           </p>
           {title.externalRatings.length > 0 && (
             <p className="external-ratings-row">

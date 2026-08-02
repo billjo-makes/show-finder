@@ -46,6 +46,7 @@ export interface TitleDetail extends TitleSummary {
   cast: { id: number; name: string; character: string }[];
   watchProviders: WatchProviders | null;
   externalRatings: ExternalRating[];
+  originalLanguage: string | null;
 }
 
 export interface AuthUser {

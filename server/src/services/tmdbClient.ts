@@ -22,6 +22,7 @@ interface RawTmdbResult {
   runtime?: number;
   episode_run_time?: number[];
   media_type?: string;
+  original_language?: string;
 }
 
 export function normalizeSummary(raw: RawTmdbResult, mediaType: MediaType): TitleSummary {
@@ -92,6 +93,7 @@ export function normalizeDetail(
     runtime: raw.runtime ?? raw.episode_run_time?.[0] ?? null,
     cast: (raw.credits?.cast ?? []).slice(0, 12),
     watchProviders: normalizeWatchProviders(raw["watch/providers"], countryCode),
+    originalLanguage: raw.original_language ?? null,
   };
 }
 
