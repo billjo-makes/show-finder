@@ -68,7 +68,7 @@ Implemented in `server/src/services/recommendationService.ts`, scoped to the cur
 
 - **App**: http://localhost:5173 — register an account (this creates your first profile automatically), then rate titles or add them to your watch list from any title detail page. Once the active profile has 3+ ratings/watch-list entries, visit **For You**. Add more profiles from the nav bar's profile switcher → "Manage Profiles". Set your region and default streaming services from **Account**.
 - **API** (used by the client, not meant for direct browsing): http://localhost:4000/api/... — see the route files under `server/src/routes/` for the full list (`auth`, `profiles`, `tmdb`, `ratings`, `watchlist`, `recommendations`).
-- There's no hosted/deployed version — this runs locally on your machine only. Data lives in `server/prisma/dev.db` (SQLite), so it persists across restarts but isn't shared between machines.
+- There's no hosted/deployed version — this runs locally on your machine only. Data lives in `server/prisma/dev.db` (SQLite), so it persists across restarts but isn't shared between machines. 
 
 ## Project layout
 
