@@ -45,6 +45,7 @@ export function NavBar() {
         <NavLink to="/" end>
           Browse
         </NavLink>
+        <NavLink to="/top-streaming">Top Streaming</NavLink>
         <NavLink to="/for-you">For You</NavLink>
         <NavLink to="/watchlist">Watch List</NavLink>
         <NavLink to="/account">Account</NavLink>

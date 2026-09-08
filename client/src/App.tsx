@@ -4,6 +4,7 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
 import { LoginPage } from "./pages/LoginPage";
 import { RegisterPage } from "./pages/RegisterPage";
 import { BrowsePage } from "./pages/BrowsePage";
+import { TopStreamingPage } from "./pages/TopStreamingPage";
 import { TitleDetailPage } from "./pages/TitleDetailPage";
 import { ForYouPage } from "./pages/ForYouPage";
 import { WatchlistPage } from "./pages/WatchlistPage";
@@ -31,6 +32,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <TitleDetailPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/top-streaming"
+          element={
+            <ProtectedRoute>
+              <TopStreamingPage />
             </ProtectedRoute>
           }
         />

@@ -326,6 +326,42 @@ input {
   display: block;
 }
 
+/* Top Streaming rails */
+.service-rail {
+  margin: 28px 0;
+}
+
+.service-rail-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.service-rail-logo {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  display: block;
+}
+
+.service-rail-header h2 {
+  font: 600 15px/1 var(--display);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.service-rail-row {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+}
+
+.service-rail-item {
+  flex: 0 0 160px;
+}
+
 /* Title grid / card */
 .title-grid {
   display: grid;

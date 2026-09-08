@@ -79,19 +79,31 @@ tmdbRouter.get(
 tmdbRouter.get(
   "/discover",
   asyncHandler(async (req, res) => {
-    const { mediaType, genreIds, keywordIds, watchProviderIds, originalLanguage, minRating, sortBy, page } =
-      z
-        .object({
-          mediaType: mediaTypeSchema,
-          genreIds: z.string().optional(),
-          keywordIds: z.string().optional(),
-          watchProviderIds: z.string().optional(),
-          originalLanguage: z.string().optional(),
-          minRating: z.coerce.number().min(0).max(10).optional(),
-          sortBy: z.string().default("popularity.desc"),
-          page: z.coerce.number().default(1),
-        })
-        .parse(req.query);
+    const {
+      mediaType,
+      genreIds,
+      keywordIds,
+      watchProviderIds,
+      watchMonetizationTypes,
+      originalLanguage,
+      minRating,
+      sortBy,
+      page,
+    } = z
+      .object({
+        mediaType: mediaTypeSchema,
+        genreIds: z.string().optional(),
+        keywordIds: z.string().optional(),
+        watchProviderIds: z.string().optional(),
+        // e.g. "flatrate" to restrict results to titles included with a
+        // subscription, excluding rent/buy-only titles on that provider.
+        watchMonetizationTypes: z.string().optional(),
+        originalLanguage: z.string().optional(),
+        minRating: z.coerce.number().min(0).max(10).optional(),
+        sortBy: z.string().default("popularity.desc"),
+        page: z.coerce.number().default(1),
+      })
+      .parse(req.query);
 
     // TMDB requires a region whenever with_watch_providers is set.
     let watchRegion: string | undefined;
@@ -115,6 +127,7 @@ tmdbRouter.get(
         with_genres: genreIds,
         with_keywords: keywordIds,
         with_watch_providers: watchProvidersParam,
+        with_watch_monetization_types: watchProviderIds ? watchMonetizationTypes : undefined,
         watch_region: watchRegion,
         with_original_language: originalLanguage,
         "vote_average.gte": minRating,
