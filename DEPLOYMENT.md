@@ -34,7 +34,7 @@ This app currently runs locally/on your LAN: SQLite on disk, a CORS rule that tr
 
 ## Deploy steps
 
-1. Push current `master` to GitHub (already done — repo is at github.com/BillJohk/show-finder).
+1. Push current `master` to GitHub (already done — repo is at github.com/billjo-makes/show-finder).
 2. Provision Neon/Supabase Postgres, apply migrations, note the connection string.
 3. Create the Render (or Fly.io) web service from the GitHub repo:
    - Build command: `pnpm install && pnpm --filter shared build && pnpm --filter server build`

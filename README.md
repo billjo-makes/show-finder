@@ -2,7 +2,7 @@
 
 A personal web app for finding movies and TV shows based on your preferences. Rate titles 1-5 stars and get a "For You" page that gets more personalized as you rate more.
 
-Repo: https://github.com/BillJohk/show-finder
+Repo: https://github.com/billjo-makes/show-finder
 
 ## Features
 
